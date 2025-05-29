@@ -1,0 +1,27 @@
+[project]
+name = "pagamento-estagiarios" # Ajuste o nome conforme seu projeto
+version = "0.1.0"
+description = "RPA para automação de pagamentos de estagiários."
+authors = [
+    { name = "Emerson Bruno", email = "seu.email@empresa.com" }
+]
+requires-python = ">=3.8"
+
+dependencies = [
+    "pandas",
+    "openpyxl",
+    "requests",
+    # Adicione outras dependências aqui
+    "django>=4.2.21",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312" # Ajuste para a versão do seu Python
