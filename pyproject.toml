@@ -1,0 +1,23 @@
+[project]
+name = "pagamento-estagiarios" # Ajuste o nome conforme seu projeto
+version = "0.1.0"
+description = "Criando a bet para pagar as contas."
+authors = [
+    { name = "Emerson Bruno", email = "bruno.dqueiroz@gmail.com" }
+]
+requires-python = ">=3.8"
+
+dependencies = [
+    
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312" 
