@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Chá de Fraldas</title>
+    <style>
+     /* Em algum lugar bem no início do seu <style> */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 400px;
+        margin: 60px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 24px;
+        font-size: 24px;
+        color: #333;
+    }
+
+    /* 2) Espaçamento extra entre label e input */
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;   /* aumentamos de 6px para 10px */
+        font-weight: bold;
+        color: #555;
+    }
+
+    /* 3) Forçar input em bloco e gap acima */
+    .input-group {
+        position: relative;
+    }
+    .input-group input {
+        display: block;        /* garante quebra de linha */
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-top: 4px;       /* distância extra em cima do input */
+    }
+
+    /* 4) Resto das regras de estilo… */
+    .input-help {
+        font-size: 12px;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .error-message {
+        display: none;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #c0392b;
+    }
+
+    .success-message {
+        display: none;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #27ae60;
+        text-align: center;
+    }
+
+    .terms-container {
+        display: none;
+        margin-top: 12px;
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #fafafa;
+        font-size: 13px;
+        color: #444;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .checkbox-group input[type="checkbox"] {
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+    }
+    .checkbox-group label {
+        font-size: 14px;
+        color: #555;
+        cursor: pointer;
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 12px;
+        background-color: #2980b9;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .submit-button:hover {
+        background-color: #2573a6;
+    }
+
+    .divider {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 14px;
+        color: #999;
+    }
+
+    .login-link {
+        display: block;
+        text-align: center;
+        font-size: 14px;
+        color: #2980b9;
+        text-decoration: none;
+    }
+    .login-link:hover {
+        text-decoration: underline;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastro de Usuário</h1>
+        
+        <form id="cadastroForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="nome" 
+                        name="nome" 
+                        placeholder="Digite seu nome completo"
+                        maxlength="100"
+                        required
+                    >
+                    <div class="input-help">Ex: Maria da Silva</div>
+                    <div class="error-message" id="nome-error"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">Telefone:</label>
+                <div class="input-group">
+                    <input 
+                        type="tel" 
+                        id="telefone" 
+                        name="telefone" 
+                        placeholder="61999887766"
+                        maxlength="11"
+                        required
+                    >
+                    <div class="input-help">Digite apenas números (DDD + número)</div>
+                    <div class="error-message" id="telefone-error"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="chave_pix">Chave PIX:</label>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="chave_pix" 
+                        name="chave_pix" 
+                        placeholder="CPF, e-mail ou telefone"
+                        maxlength="100"
+                        required
+                    >
+                    <div class="input-help">Informe a chave PIX válida</div>
+                    <div class="error-message" id="chave-pix-error"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        id="senha" 
+                        name="senha" 
+                        placeholder="Digite sua senha"
+                        required
+                    >
+                    <div class="error-message" id="senha-error"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirma_senha">Confirmar Senha:</label>
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        id="confirma_senha" 
+                        name="confirma_senha" 
+                        placeholder="Repita sua senha"
+                        required
+                    >
+                    <div class="error-message" id="confirma-senha-error"></div>
+                </div>
+            </div>
+            
+            <div class="checkbox-group">
+                <input 
+                    type="checkbox" 
+                    id="termos-checkbox" 
+                    name="termos" 
+                >
+                <label for="termos-checkbox">Aceito os termos de uso</label>
+            </div>
+            <div class="error-message" id="termos-error"></div>
+            
+            <div class="terms-container" id="terms-container">
+                <h3>Termos de Uso</h3>
+                <p>
+                    Ao utilizar este serviço, você concorda com as condições a seguir:
+                </p>
+                <ul>
+                    <li>O usuário deve informar dados verdadeiros. </li>
+                    <li>Não é permitido compartilhar sua senha com terceiros.</li>
+                    <li>Seus dados pessoais serão usados conforme nossa Política de Privacidade.</li>
+                    <li>O serviço reserva-se o direito de suspender contas em caso de uso indevido.</li>
+                </ul>
+                <p>Leia atentamente antes de prosseguir. Ao fechar esta janela, a opção "Aceito" permanecerá marcada.</p>
+            </div>
+            
+            <button type="submit" class="submit-button">
+                Cadastrar
+            </button>
+            
+            <div class="success-message" id="success-message">
+                Usuário cadastrado com sucesso!
+            </div>
+        </form>
+        
+        <div class="divider">
+            ──────── ou ────────
+        </div>
+        
+        <a href="{% url 'login_page' %}" class="login-link" id="login-link">
+            Já tenho conta, fazer login
+        </a>
+    </div>
+
+    <script>
+        // Função auxiliar para obter o CSRF token do cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cadastroForm = document.getElementById('cadastroForm');
+            const nomeInput = document.getElementById('nome');
+            const telefoneInput = document.getElementById('telefone');
+            const chavePixInput = document.getElementById('chave_pix');
+            const senhaInput = document.getElementById('senha');
+            const confirmaSenhaInput = document.getElementById('confirma_senha');
+            const termosCheckbox = document.getElementById('termos-checkbox');
+            const termsContainer = document.getElementById('terms-container');
+            const loginLink = document.getElementById('login-link');
+            
+            function showError(elementId, message) {
+                const errorDiv = document.getElementById(elementId);
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+            
+            function clearMessages() {
+                const errorMessages = document.querySelectorAll('.error-message');
+                const successMessages = document.querySelectorAll('.success-message');
+                errorMessages.forEach(msg => msg.style.display = 'none');
+                successMessages.forEach(msg => msg.style.display = 'none');
+            }
+            
+            // Validação de telefone em tempo real
+            telefoneInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                if (e.target.value.length > 11) {
+                    e.target.value = e.target.value.slice(0, 11);
+                }
+                const errorDiv = document.getElementById('telefone-error');
+                if (e.target.value.length >= 10) {
+                    errorDiv.style.display = 'none';
+                }
+            });
+            
+            // Mostrar/ocultar termos quando checkbox for clicado
+            termosCheckbox.addEventListener('change', () => {
+                if (termosCheckbox.checked) {
+                    termsContainer.style.display = 'block';
+                } else {
+                    termsContainer.style.display = 'none';
+                }
+            });
+            
+            cadastroForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                clearMessages();
+                
+                const nome = nomeInput.value.trim();
+                const telefone = telefoneInput.value.trim();
+                const chavePix = chavePixInput.value.trim();
+                const senha = senhaInput.value.trim();
+                const confirmaSenha = confirmaSenhaInput.value.trim();
+                const aceitouTermos = termosCheckbox.checked;
+                
+                let hasError = false;
+                
+                // Validação do nome
+                if (!nome) {
+                    showError('nome-error', 'Nome é obrigatório');
+                    hasError = true;
+                } else if (nome.length < 3) {
+                    showError('nome-error', 'Nome deve ter pelo menos 3 caracteres');
+                    hasError = true;
+                }
+                
+                // Validação do telefone
+                if (!telefone) {
+                    showError('telefone-error', 'Telefone é obrigatório');
+                    hasError = true;
+                } else if (telefone.length < 10 || telefone.length > 11) {
+                    showError('telefone-error', 'Telefone deve ter 10 ou 11 dígitos');
+                    hasError = true;
+                } else if (!/^\d+$/.test(telefone)) {
+                    showError('telefone-error', 'Telefone deve conter apenas números');
+                    hasError = true;
+                }
+                
+                // Validação da chave PIX
+                if (!chavePix) {
+                    showError('chave-pix-error', 'Chave PIX é obrigatória');
+                    hasError = true;
+                }
+                
+                // Validação da senha
+                if (!senha) {
+                    showError('senha-error', 'Senha é obrigatória');
+                    hasError = true;
+                } else if (senha.length < 4) {
+                    showError('senha-error', 'Senha deve ter pelo menos 4 caracteres');
+                    hasError = true;
+                }
+                
+                // Validação da confirmação de senha
+                if (!confirmaSenha) {
+                    showError('confirma-senha-error', 'Confirmação de senha é obrigatória');
+                    hasError = true;
+                } else if (senha && confirmaSenha !== senha) {
+                    showError('confirma-senha-error', 'As senhas não coincidem');
+                    hasError = true;
+                }
+                
+                // Validação dos termos
+                if (!aceitouTermos) {
+                    showError('termos-error', 'Você deve aceitar os termos de uso');
+                    hasError = true;
+                }
+                
+                if (!hasError) {
+                    try {
+                        const response = await fetch('{% url "cadastro_usuario" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ 
+                                nome, 
+                                telefone, 
+                                chave_pix: chavePix, 
+                                senha, 
+                                confirma_senha: confirmaSenha 
+                            })
+                        });
+        
+                        const data = await response.json();
+        
+                        if (response.ok) {
+                            document.getElementById('success-message').textContent = data.message;
+                            document.getElementById('success-message').style.display = 'block';
+                            
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url; // por exemplo, URL para login ou página inicial
+                            }, 1500);
+                        } else {
+                            // Exibir erros vindos da API
+                            if (data.errors) {
+                                if (data.errors.nome) showError('nome-error', data.errors.nome);
+                                if (data.errors.telefone) showError('telefone-error', data.errors.telefone);
+                                if (data.errors.chave_pix) showError('chave-pix-error', data.errors.chave_pix);
+                                if (data.errors.senha) showError('senha-error', data.errors.senha);
+                                if (data.errors.confirma_senha) showError('confirma-senha-error', data.errors.confirma_senha);
+                                if (data.errors.non_field_errors) showError('confirma-senha-error', data.errors.non_field_errors);
+                            } else {
+                                showError('nome-error', 'Erro desconhecido ao tentar cadastrar.');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro de rede ou JSON:', error);
+                        showError('nome-error', 'Não foi possível conectar ao servidor. Tente novamente.');
+                    }
+                }
+            });
+            
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = "{% url 'login_page' %}";
+            });
+        });
+    </script>
+</body>
+</html>
