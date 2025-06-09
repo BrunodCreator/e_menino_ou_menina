@@ -1,137 +1,20 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Chá de Fraldas</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        
-        .container {
-            text-align: center;
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 1.8em;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: bold;
-        }
-        
-        input[type="tel"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            box-sizing: border-box;
-        }
-        
-        input[type="tel"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-        
-        .login-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 15px 40px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .login-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-        }
-        
-        .register-link {
-            color: #ff69b4;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
-            transition: color 0.3s ease;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        
-        .register-link:hover {
-            color: #e91e63;
-            text-decoration: underline;
-        }
-        
-        .divider {
-            margin: 20px 0;
-            color: #888;
-            font-size: 14px;
-        }
-        
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .success-message {
-            color: #28a745;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .input-group {
-            position: relative;
-        }
-        
-        .input-help {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-        }
-    </style>
+
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
     <div class="container">
         <h1>Entrar na Aposta</h1>
         
         <form id="loginForm">
-            {% csrf_token %} <div class="form-group">
+            {% csrf_token %}
+            <div class="form-group">
                 <label for="telefone">Telefone:</label>
                 <div class="input-group">
                     <input 
@@ -179,127 +62,12 @@
         </a>
     </div>
 
+    <!-- Aqui a URL é gerada no lado do servidor e passada para o JS -->
     <script>
-        // Função auxiliar para obter o CSRF token do cookie
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginForm = document.getElementById('loginForm');
-            const telefoneInput = document.getElementById('telefone');
-            const senhaInput = document.getElementById('senha');
-            const registerLink = document.getElementById('register-link');
-            
-            function showError(elementId, message) {
-                const errorDiv = document.getElementById(elementId);
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-            }
-            
-            function clearMessages() {
-                const errorMessages = document.querySelectorAll('.error-message');
-                const successMessages = document.querySelectorAll('.success-message');
-                errorMessages.forEach(msg => msg.style.display = 'none');
-                successMessages.forEach(msg => msg.style.display = 'none');
-            }
-            
-            telefoneInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/\D/g, '');
-                if (e.target.value.length > 11) {
-                    e.target.value = e.target.value.slice(0, 11);
-                }
-                const errorDiv = document.getElementById('telefone-error');
-                if (e.target.value.length >= 10) {
-                    errorDiv.style.display = 'none';
-                }
-            });
-            
-            loginForm.addEventListener('submit', async (e) => { // Adicionado 'async'
-                e.preventDefault();
-                clearMessages();
-                
-                const telefone = telefoneInput.value.trim();
-                const senha = senhaInput.value.trim();
-                
-                let hasError = false;
-                
-                if (!telefone) {
-                    showError('telefone-error', 'Telefone é obrigatório');
-                    hasError = true;
-                } else if (telefone.length < 10 || telefone.length > 11) {
-                    showError('telefone-error', 'Telefone deve ter 10 ou 11 dígitos');
-                    hasError = true;
-                } else if (!/^\d+$/.test(telefone)) {
-                    showError('telefone-error', 'Telefone deve conter apenas números');
-                    hasError = true;
-                }
-                
-                if (!senha) {
-                    showError('senha-error', 'Senha é obrigatória');
-                    hasError = true;
-                } else if (senha.length < 4) {
-                    showError('senha-error', 'Senha deve ter pelo menos 4 caracteres');
-                    hasError = true;
-                }
-                
-                if (!hasError) {
-                    try {
-                        const response = await fetch('{% url "login_api" %}', { // Use a URL nomeada
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken') // Envie o CSRF token
-                            },
-                            body: JSON.stringify({ telefone, senha })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) { // response.ok é true para status 2xx
-                            document.getElementById('success-message').textContent = data.message;
-                            document.getElementById('success-message').style.display = 'block';
-                            
-                            setTimeout(() => {
-                                window.location.href = data.redirect_url; // Redireciona para /apostas/
-                            }, 1500); // Um pouco menos de delay
-                        } else {
-                            // Se a resposta não for OK (ex: 400, 401), exiba os erros
-                            if (data.errors) {
-                                if (data.errors.telefone) showError('telefone-error', data.errors.telefone);
-                                if (data.errors.senha) showError('senha-error', data.errors.senha);
-                                if (data.errors.non_field_errors) showError('senha-error', data.errors.non_field_errors); // Pode ser mostrado em um lugar genérico
-                            } else {
-                                showError('senha-error', 'Erro desconhecido ao tentar fazer login.');
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Erro de rede ou JSON:', error);
-                        showError('senha-error', 'Não foi possível conectar ao servidor. Tente novamente.');
-                    }
-                }
-            });
-            
-            registerLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                // Redireciona para a URL de cadastro definida no Django
-                window.location.href = "{% url 'cadastro_usuario' %}"; 
-            });
-        });
+        const loginUrl = "{% url 'login_api' %}";  // A URL correta é gerada e armazenada em uma variável
+        const cadastroUrl = "{% url 'cadastro_usuario' %}"; // A URL para página de cadastro
     </script>
+
+    <script src="{% static 'js/login.js' %}"></script>
 </body>
 </html>
-
-
-

@@ -9,7 +9,7 @@ urlpatterns = [
     
     # URL para a API de logout (recebe POST ou GET do JS/botão)
     path('logout/', views.logout_view, name='logout_api'), # Adicione esta linha para o logout
-    path('cadastro/', views.cadastro_usuario, name='cadastro_usuario')
+    path('cadastro_usuario/', views.cadastro_usuario, name='cadastro_usuario')
 ]
 
 
