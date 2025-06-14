@@ -6,7 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Obtenção de Referências aos Elementos HTML
     // É uma boa prática armazenar referências a elementos HTML que serão frequentemente usados em variáveis.
     const cadastroForm = document.getElementById('cadastroForm'); // O formulário de cadastro principal
-    const cadastroURL = cadastroForm.dataset.cadastroURL; // Recupera o valor do atributo data-cadastro-url
+    console.log("Elemento cadastroForm:", cadastroForm);
+    console.log("Dataset do formulário:", cadastroForm.dataset);
+    const cadastroURL = cadastroForm.dataset.cadastroUrl; // Recupera o valor do atributo data-cadastro-url
+    console.log("Valor de cadastroURL:", cadastroURL);
     const nomeInput = document.getElementById('nome'); // Campo de input do nome
     const telefoneInput = document.getElementById('telefone'); // Campo de input do telefone
     const chavePixInput = document.getElementById('chave_pix'); // Campo de input da chave PIX
