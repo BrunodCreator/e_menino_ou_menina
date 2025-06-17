@@ -10,6 +10,7 @@ dependencies = [
     "requests",
     # Adicione outras dependências aqui
     "django>=4.2.21",
+    "mysqlclient>=2.2.7",
 ]
 
 [project.optional-dependencies]
