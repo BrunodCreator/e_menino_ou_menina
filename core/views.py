@@ -111,25 +111,31 @@ def logout_view(request):
     return JsonResponse({
         'success': True,
         'message': 'Deslogado com sucesso.',
-        'redirect_url': '/'
+        'redirect_url': ''
     })
 
+
+from django.db.models import Sum
 
 @login_required # Este decorador garante que apenas usuários logados podem acessar esta view.
 # Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
 def apostas_view(request):
     """
-    Exibe a página de apostas para usuários logados.
-    Acessa as informações do usuário logado através de request.user.
+    Eenderiza a página de apostas com os dados iniciais do usuário
     """
     # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
     # quando o usuário está logado.
-    usuario_logado = request.user
+    usuario_apostas = Aposta.objects.filter(usuario=request.user)
+    total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+    quantidade_apostas = usuario_apostas.count()
+    ultima_aposta = usuario_apostas.first()
     
     # Cria um dicionário 'context' para passar dados para o template HTML.
     context = {
-        'nome_usuario': usuario_logado.nome, # Acessa o nome do usuário logado
-        'telefone_usuario': usuario_logado.get_telefone_formatado(), # Chama um método do seu modelo para formatar o telefone
+        'usuario': request.user, # Acessa o nome do usuário logado
+        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
+        'quantidade_apostas': quantidade_apostas,
+        'ultima_aposta': ultima_aposta,
     }
     # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
     return render(request, 'apostas.html', context)
@@ -239,8 +245,9 @@ from decimal import Decimal
 from .models import Aposta # Importe seu modelo Aposta
 
 # View para obter os potes e odds (para o frontend buscar as informações)
+@login_required
 @require_http_methods(["GET"]) # Garante que só aceite requisições GET
-def get_potes_e_odds(request):
+def get_dados_usuario_e_odds(request):
     """
     Retorna os totais dos potes (masculino/feminino) e as odds calculadas.
     """
@@ -252,16 +259,40 @@ def get_potes_e_odds(request):
         total_masculino = Aposta.objects.get_total_pote_masculino()
         total_feminino = Aposta.objects.get_total_pote_feminino()
 
+        usuario_apostas = Aposta.objects.filter(usuario=request.user, aposta_valida=True)
+        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+        quantidade_apostas = usuario_apostas.count()
+        ultima_aposta = usuario_apostas.order_by('-data_aposta').first() # Obter a aposta mais recente
+
+        # Formatar última aposta
+        ultima_aposta_texto = "-"
+        if ultima_aposta:
+            sexo_display = "Menino" if ultima_aposta.sexo_escolha == 'M' else "Menina"
+            ultima_aposta_texto = f"{sexo_display} - R$ {ultima_aposta.valor_aposta:.2f}".replace('.', ',')
+
         response_data = {
-            'total_menino': str(total_masculino),  # Converta Decimal para string
-            'total_feminino': str(total_feminino), # Converta Decimal para string
-            'odd_menino': str(odds_data['M']),     # 'M' é a chave para odd masculino
-            'odd_feminina': str(odds_data['F']),    # 'F' é a chave para odd feminino
+            # Dados das odds
+            'odd_menino': str(odds_data.get('M', Decimal('1.0'))), # Garante um valor padrão se a chave não existir
+            'odd_menina': str(odds_data.get('F', Decimal('1.0'))),
+
+            # Dados dos potes (opcional, para informação)
+            'total_pote_masculino': str(total_masculino),
+            'total_pote_feminino': str(total_feminino),
+
+            # Dados do usuário
+            'usuario': {
+                'nome': request.user.nome,
+                'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
+                'quantidade_apostas': quantidade_apostas,
+                'ultima_aposta': ultima_aposta_texto,
+            }
         }
+
         return JsonResponse(response_data)
     except Exception as e:
-        # Lidar com possíveis erros (ex: banco de dados indisponível)
-        return JsonResponse({'error': f'Ocorreu um erro: {str(e)}'}, status=500)
+        # Logar o erro completo para depuração
+        print(f"Erro em get_dados_usuario_e_odds: {e}")
+        return JsonResponse({'error': f'Erro ao buscar dados: {str(e)}'}, status=500)
 
 
 # View para registrar uma nova aposta (requer autenticação e POST)
@@ -275,7 +306,8 @@ def registrar_aposta(request):
         data = json.loads(request.body) # Analisa o JSON do corpo da requisição
 
         sexo_escolha = data.get('sexo_escolha') # 'M' ou 'F'
-        valor_aposta = Decimal(data.get('valor_aposta')) # Valor em Decimal
+        valor_aposta_str = str(data.get('valor_aposta', '0.00')) 
+        valor_aposta = Decimal(valor_aposta_str)
 
         # Validação básica
         if not sexo_escolha or sexo_escolha not in ['M', 'F']:
@@ -290,22 +322,36 @@ def registrar_aposta(request):
             sexo_escolha=sexo_escolha,
             valor_aposta=valor_aposta,
             # 'valor_para_pote' será calculado automaticamente no método save() do modelo Aposta
-            aposta_valida=False, # Por padrão, aposta_valida é False até o comprovante ser verificado
+            aposta_valida=True, # Por padrão, aposta_valida é False até o comprovante ser verificado 
             # comprovante_pagamento = (não é enviado via JSON, será em outra etapa/view se houver upload de arquivo)
+            #TODO alterar aposta_valida para False 
         )
 
-        # Você pode retornar os dados da aposta criada ou uma mensagem de sucesso
+        usuario_apostas = Aposta.objects.filter(usuario=request.user, aposta_valida=True)
+        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+        quantidade_apostas = usuario_apostas.count()
+        # Para a última aposta, pode usar a aposta recém-criada
+        ultima_aposta_display = f"{aposta.get_sexo_escolha_display().upper()} - R${aposta.valor_aposta:.2f}".replace('.', ',')
+
         return JsonResponse({
-            'message': 'Aposta registrada com sucesso! Aguardando validação do comprovante.',
-            'aposta_id': aposta.id,
-            'sexo_escolha': aposta.get_sexo_escolha_display(), # 'Masculino' ou 'Feminino'
-            'valor_aposta': str(aposta.valor_aposta),
-            'valor_para_pote': str(aposta.valor_para_pote),
-        }, status=201) # 201 Created
+            'success': True,
+            'message': 'Aposta regustrada com sucesso!',
+            'aposta':{
+                'id': aposta.id,
+                'sexo_escolha': aposta.get_sexo_escolha_display(),
+                'valor_aposta': str(aposta.valor_aposta),
+                'valor_para_pote': str(aposta.valor_para_pote),
+            },
+            'usuario_atualizado': {
+                'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
+                'quantidade_apostas': quantidade_apostas,
+                'ultima_aposta': ultima_aposta_display,
+            }
+        }, status=201)
 
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Requisição inválida: JSON malformado.'}, status=400)
-    except ValueError:
-        return JsonResponse({'error': 'Valor da aposta inválido. Deve ser um número.'}, status=400)
+        return JsonResponse({'error': 'Dados inválidos.'}, status=400)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Valor da aposta inválido.'}, status=400)
     except Exception as e:
-        return JsonResponse({'error': f'Ocorreu um erro inesperado: {str(e)}'}, status=500)
+        return JsonResponse({'error': f'Erro inesperado: {str(e)}'}, status=500)

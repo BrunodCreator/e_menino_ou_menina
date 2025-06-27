@@ -1,3 +1,4 @@
+// Seletores de elementos DOM
 const blocks = document.querySelectorAll('.option-block');
 const confirmButton = document.getElementById('confirmButton');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -13,118 +14,324 @@ const lastBetElement = document.getElementById('lastBet');
 const menuToggle = document.getElementById('menuToggle');
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
+const userNameElement = document.getElementById('userName'); 
+const oddMeninoElement = document.getElementById('oddMenino');
+const oddMeninaElement = document.getElementById('oddMenina');
 
+// Seletores para o novo modal de mensagem
+const messageModalOverlay = document.getElementById('messageModalOverlay');
+const messageModalContent = document.getElementById('messageModalContent');
+const messageModalText = document.getElementById('messageModalText');
+const messageModalConfirmButton = document.getElementById('messageModalConfirmButton');
+const messageModalCancelButton = document.getElementById('messageModalCancelButton');
+
+// Variáveis de estado
 let currentSelection = null;
 let currentOdds = 0;
-let totalBetAmount = 0;
-let betCount = 0;
 let sidebarOpen = false;
+let resolveMessagePromise = null; 
+
+/**
+ * Exibe um modal de mensagem personalizado.
+ * @param {string} message - A mensagem a ser exibida.
+ * @param {boolean} [isConfirm=false] - Se true, exibe botões de confirmação/cancelamento.
+ * @returns {Promise<boolean>} Retorna uma Promise que resolve para true se confirmado, false se cancelado (apenas para isConfirm=true).
+ */
+function showMessageModal(message, isConfirm = false) {
+    messageModalText.textContent = message;
+    messageModalConfirmButton.style.display = isConfirm ? 'block' : 'none';
+    messageModalCancelButton.style.display = isConfirm ? 'block' : 'none';
+    messageModalOverlay.classList.add('show');
+
+    if (isConfirm) {
+        return new Promise(resolve => {
+            resolveMessagePromise = resolve;
+        });
+    } else {
+        const closeHandler = () => {
+            messageModalOverlay.classList.remove('show');
+            messageModalConfirmButton.removeEventListener('click', closeHandler);
+        };
+        messageModalConfirmButton.addEventListener('click', closeHandler);
+        messageModalOverlay.addEventListener('click', function(e) {
+            if (e.target === messageModalOverlay && !isConfirm) {
+                closeHandler();
+            }
+        });
+        return Promise.resolve(true); 
+        
+    }
+}
+
+// Event listeners para os botões do modal de mensagem
+if (messageModalConfirmButton) {
+    messageModalConfirmButton.addEventListener('click', () => {
+        if (resolveMessagePromise) {
+            resolveMessagePromise(true);
+            resolveMessagePromise = null;
+        }
+        messageModalOverlay.classList.remove('show');
+    });
+}
+
+if (messageModalCancelButton) {
+    messageModalCancelButton.addEventListener('click', () => {
+        if (resolveMessagePromise) {
+            resolveMessagePromise(false);
+            resolveMessagePromise = null;
+        }
+        messageModalOverlay.classList.remove('show');
+    });
+}
+
+if (messageModalOverlay) {
+    messageModalOverlay.addEventListener('click', function(e) {
+        if (e.target === messageModalOverlay && !messageModalCancelButton.style.display === 'block') { 
+            messageModalOverlay.classList.remove('show');
+        }
+    });
+}
+
+
+/**
+ * Carrega os dados do usuário, odds e informações de apostas do backend.
+ */
+async function carregarDados() {
+    console.log('carregarDados: Iniciando carregamento de dados...');
+    try {
+        const response = await fetch('/dados/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('carregarDados: Dados recebidos e analisados (JSON):', data);
+
+            // Adicionado log para verificar os elementos antes de usá-los
+            console.log('carregarDados: Elementos DOM verificados:');
+            console.log('  userNameElement:', userNameElement);
+            console.log('  oddMeninoElement:', oddMeninoElement);
+            console.log('  oddMeninaElement:', oddMeninaElement);
+            console.log('  totalBetElement:', totalBetElement);
+            console.log('  betCountElement:', betCountElement);
+            console.log('  lastBetElement:', lastBetElement);
+            console.log('  blocks[0]:', blocks[0]);
+            console.log('  blocks[1]:', blocks[1]);
+
+
+            // Atualizar nome do usuário
+            if (userNameElement && data.usuario && data.usuario.nome) {
+                userNameElement.textContent = data.usuario.nome;
+            } else {
+                console.warn('carregarDados: Não foi possível atualizar o nome do usuário. Elemento ou dados ausentes.');
+            }
+
+            // Atualizar odds na interface
+            const oddMenino = parseFloat(data.odd_menino);
+            const oddMenina = parseFloat(data.odd_menina);
+
+            if (oddMeninoElement) {
+                oddMeninoElement.textContent = `odd: ${oddMenino.toFixed(1)}x`;
+            } else {
+                console.warn('carregarDados: Elemento oddMeninoElement não encontrado.');
+            }
+            if (oddMeninaElement) {
+                oddMeninaElement.textContent = `odd: ${oddMenina.toFixed(1)}x`;
+            } else {
+                console.warn('carregarDados: Elemento oddMeninaElement não encontrado.');
+            }
+
+            // Atualizar data-odds nos blocos
+            if (blocks[0]) blocks[0].setAttribute('data-odds', oddMenino);
+            if (blocks[1]) blocks[1].setAttribute('data-odds', oddMenina);
+
+            // Atualizar dados do usuário
+            if (totalBetElement && data.usuario) {
+                totalBetElement.textContent = data.usuario.total_apostado;
+            } else {
+                console.warn('carregarDados: Elemento totalBetElement ou dados do usuário ausentes.');
+            }
+            if (betCountElement && data.usuario) {
+                betCountElement.textContent = data.usuario.quantidade_apostas;
+            } else {
+                console.warn('carregarDados: Elemento betCountElement ou dados do usuário ausentes.');
+            }
+            if (lastBetElement && data.usuario) {
+                lastBetElement.textContent = data.usuario.ultima_aposta;
+            } else {
+                console.warn('carregarDados: Elemento lastBetElement ou dados do usuário ausentes.');
+            }
+            
+            console.log('carregarDados: Dados atualizados com sucesso!');
+
+        } else {
+            const errorText = await response.text();
+            console.error('carregarDados: Erro ao carregar dados (resposta não OK):', response.status, errorText);
+            showMessageModal('Erro ao carregar dados iniciais. Por favor, tente novamente. Detalhes: ' + response.status);
+        }
+    } catch (error) {
+        console.error('carregarDados: Erro catastrófico na requisição de carregamento de dados:', error); 
+        showMessageModal('Erro de conexão ao carregar dados. Verifique sua internet ou tente novamente.');
+    }
+}
+
+// CORRIGIDO: Erro de digitação `carrergarDados` para `carregarDados`
+document.addEventListener('DOMContentLoaded', carregarDados);
 
 // Toggle do menu lateral
-menuToggle.addEventListener('click', function() {
-    sidebarOpen = !sidebarOpen;
-    
-    if (sidebarOpen) {
-        sidebar.classList.add('open');
-        menuToggle.classList.add('open');
-        mainContent.classList.add('shifted');
-    } else {
-        sidebar.classList.remove('open');
-        menuToggle.classList.remove('open');
-        mainContent.classList.remove('shifted');
-    }
-});
+if (menuToggle && sidebar && mainContent) {
+    menuToggle.addEventListener('click', function() {
+        sidebarOpen = !sidebarOpen;
+
+        if (sidebarOpen) {
+            sidebar.classList.add('open');
+            menuToggle.classList.add('open');
+            mainContent.classList.add('shifted');
+        } else {
+            sidebar.classList.remove('open');
+            menuToggle.classList.remove('open');
+            mainContent.classList.remove('shifted');
+        }
+    });
+}
+
 
 // Seleção das opções
-blocks.forEach(block => {
-    block.addEventListener('click', function() {
-        // Remove seleção anterior
-        blocks.forEach(b => b.classList.remove('selected'));
-        
-        // Adiciona seleção ao bloco clicado
-        this.classList.add('selected');
-        
-        // Atualiza a seleção atual
-        currentSelection = this.dataset.option;
-        currentOdds = parseFloat(this.dataset.odds);
-        
-        // Remove classes anteriores do botão e adiciona a nova
-        confirmButton.classList.remove('menino', 'menina');
-        confirmButton.classList.add(currentSelection);
-        
-        // Mostra o botão de confirmar
-        confirmButton.classList.add('show');
+if (blocks && confirmButton) { // Adicionado confirmButton para garantir que ele exista
+    blocks.forEach(block => {
+        block.addEventListener('click', function() {
+            blocks.forEach(b => b.classList.remove('selected'));
+            
+            this.classList.add('selected');
+            
+            currentSelection = this.dataset.option;
+            currentOdds = parseFloat(this.dataset.odds);
+
+            confirmButton.classList.remove('menino', 'menina');
+            if (currentSelection === 'menino') { 
+                confirmButton.classList.add('menino');
+            } else {
+                confirmButton.classList.add('menina');
+            }
+
+            confirmButton.classList.add('show');
+        });
     });
-});
+}
+
 
 // Confirmar seleção - abre modal
-confirmButton.addEventListener('click', function() {
-    if (currentSelection) {
-        selectedOptionDisplay.textContent = currentSelection.toUpperCase();
-        modalOverlay.classList.add('show');
-        betAmountInput.value = '';
-        expectedReturnElement.textContent = 'R$ 0,00';
-        betAmountInput.focus();
-    }
-});
+if (confirmButton && selectedOptionDisplay && modalOverlay && betAmountInput && expectedReturnElement) { // Adicionado expectedReturnElement
+    confirmButton.addEventListener('click', function() {
+        if (currentSelection) {
+            const displayText = currentSelection === 'menino' ? 'MENINO' : 'MENINA';
+            selectedOptionDisplay.textContent = displayText;
+            modalOverlay.classList.add('show');
+            betAmountInput.value = '';
+            expectedReturnElement.textContent = 'R$ 0,00';
+            betAmountInput.focus();
+        }
+    });
+}
+
 
 // Calcular retorno esperado
-betAmountInput.addEventListener('input', function() {
-    const betAmount = parseFloat(this.value) || 0;
-    const expectedReturn = betAmount * currentOdds;
-    expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
-});
+if (betAmountInput && expectedReturnElement) {
+    betAmountInput.addEventListener('input', function() {
+        const betAmount = parseFloat(this.value) || 0;
+        const expectedReturn = betAmount * currentOdds;
+        expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
+    });
+}
+
 
 // Fazer aposta
-placeBetButton.addEventListener('click', function() {
-    const betAmount = parseFloat(betAmountInput.value);
-    
-    if (!betAmount || betAmount <= 0) {
-        alert('Por favor, insira um valor válido para a aposta.');
-        return;
-    }
-    
-    // Atualiza os dados
-    totalBetAmount += betAmount;
-    betCount++;
-    
-    // Atualiza a interface
-    totalBetElement.textContent = `R$ ${totalBetAmount.toFixed(2).replace('.', ',')}`;
-    betCountElement.textContent = betCount;
-    lastBetElement.textContent = `${currentSelection.toUpperCase()} - R$ ${betAmount.toFixed(2).replace('.', ',')}`;
-    
-    alert(`Aposta de R$ ${betAmount.toFixed(2).replace('.', ',')} confirmada para: ${currentSelection.toUpperCase()}!\nRetorno esperado: R$ ${(betAmount * currentOdds).toFixed(2).replace('.', ',')}`);
-    
-    // Fecha modal e reset da seleção
-    modalOverlay.classList.remove('show');
-    blocks.forEach(b => b.classList.remove('selected'));
-    confirmButton.classList.remove('show', 'menino', 'menina');
-    currentSelection = null;
-    currentOdds = 0;
-});
+if (placeBetButton && betAmountInput && totalBetElement && betCountElement && lastBetElement) {
+    placeBetButton.addEventListener('click', async function() {
+        const betAmount = parseFloat(betAmountInput.value);
+
+        if (!betAmount || betAmount <= 0) {
+            showMessageModal('Por favor, insira um valor válido para a aposta.');
+            return;
+        }
+
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+
+            if (!csrfToken) {
+                showMessageModal('Erro: Token CSRF não encontrado. Recarregue a página.');
+                return;
+            }
+
+            const response = await fetch('/registrar/', {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({
+                    sexo_escolha: currentSelection === 'menino' ? 'M' : 'F',
+                    valor_aposta: betAmount
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                totalBetElement.textContent = data.usuario_atualizado.total_apostado;
+                betCountElement.textContent = data.usuario_atualizado.quantidade_apostas;
+                lastBetElement.textContent = data.usuario_atualizado.ultima_aposta;
+
+                showMessageModal(data.message);
+
+                await carregarDados(); // Recarrega os dados após a aposta
+            } else {
+                showMessageModal(data.error || 'Erro ao registrar aposta');
+            }
+
+        } catch (error) {
+            console.error('Erro ao processar aposta:', error);
+            showMessageModal('Erro ao processar aposta. Tente novamente.');
+        }
+
+        modalOverlay.classList.remove('show');
+        blocks.forEach(b => b.classList.remove('selected'));
+        confirmButton.classList.remove('show', 'menino', 'menina');
+        currentSelection = null;
+        currentOdds = 0;
+    });
+}
+
 
 // Cancelar aposta
-cancelBetButton.addEventListener('click', function() {
-    modalOverlay.classList.remove('show');
-});
+if (cancelBetButton && modalOverlay) {
+    cancelBetButton.addEventListener('click', function() {
+        modalOverlay.classList.remove('show');
+    });
+}
+
 
 // Fechar modal clicando fora
-modalOverlay.addEventListener('click', function(e) {
-    if (e.target === modalOverlay) {
-        modalOverlay.classList.remove('show');
-    }
-});
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+            modalOverlay.classList.remove('show');
+        }
+    });
+}
+
 
 // Logout
-logoutButton.addEventListener('click', function() {
-    if (confirm('Tem certeza que deseja sair da sua conta?')) {
-        alert('Logout realizado com sucesso!');
-        
-        // Reset dos dados
-        totalBetAmount = 0;
-        betCount = 0;
-        totalBetElement.textContent = 'R$ 0,00';
-        betCountElement.textContent = '0';
-        lastBetElement.textContent = '-';
-    }
-});
+if (logoutButton) {
+    logoutButton.addEventListener('click', async function() {
+        const confirmed = await showMessageModal('Tem certeza que deseja sair da sua conta?', true);
+        if (confirmed) {
+            window.location.href = '/logout/'; 
+        }
+    });
+}

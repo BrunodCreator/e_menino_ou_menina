@@ -1,324 +1,428 @@
-* {
+/* Estilos globais e de reset */
+html, body {
+    height: 100%; /* Garante que HTML e body ocupem a altura total da viewport */
     margin: 0;
     padding: 0;
+    overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+    font-family: "Inter", sans-serif; /* Define uma fonte padrão */
+    background-color: #f0f2f5; /* Um fundo suave para toda a página */
+}
+
+/* Aplica box-sizing a todos os elementos para melhor controle de layout */
+* {
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #ffffff;
-    height: 100vh;
-    display: flex;
-    margin: 0;
-    padding: 0;
-}
-
-.sidebar {
-    width: 280px;
-    background-color: white;
-    border-right: 1px solid #e0e0e0;
-    padding: 30px 25px;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 1000;
-}
-
-.sidebar.open {
-    transform: translateX(0);
-}
-
-.menu-toggle {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    color: #666;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    z-index: 1001;
-}
-
-.menu-toggle:hover {
-    background-color: #f5f5f5;
-    color: #333;
-}
-
-.menu-toggle.open {
-    left: 300px;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.info-item {
-    margin-bottom: 20px;
-}
-
-.info-label {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.info-value {
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-}
-
-.info-value.money {
-    color: #00BCD4;
-}
-
-.logout-button {
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    background-color: #f5f5f5;
-    color: #666;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 20px;
-}
-
-.logout-button:hover {
-    background-color: #eeeeee;
-    color: #333;
-    border-color: #ccc;
-}
-
-.main-content {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 100vw;
-    transition: all 0.3s ease;
-    background-color: white;
-}
-
-.main-content.shifted {
-    transform: translateX(140px);
-}
-
-.container {
-    display: flex;
-    gap: 40px;
-    margin-bottom: 30px;
-}
-
-.option-block {
-    width: 200px;
-    height: 120px;
-    border: 2px solid #333;
-    background-color: white;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    user-select: none;
-    position: relative;
-}
-
-.option-block .option-text {
-    color: #333;
-    margin-bottom: 8px;
-}
-
-.option-block .odds-text {
-    font-size: 14px;
-    color: #666;
-    font-weight: 400;
-}
-
-.option-block.selected.menino {
-    border-color: #2196F3;
-}
-
-.option-block.selected.menina {
-    border-color: #E91E63;
-}
-
-.confirm-button {
-    padding: 12px 30px;
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    display: none;
-    transition: all 0.3s ease;
-    margin-top: 20px;
-}
-
-.confirm-button.menino {
-    background-color: #2196F3;
-}
-
-.confirm-button.menino:hover {
-    background-color: #1976D2;
-}
-
-.confirm-button.menina {
-    background-color: #E91E63;
-}
-
-.confirm-button.menina:hover {
-    background-color: #C2185B;
-}
-
-.confirm-button.show {
-    display: block;
-}
-
-/* Modal de formulário */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .modal-overlay.show {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .bet-form {
-    background-color: white;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    width: 400px;
-    max-width: 90vw;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-overlay.show .bet-form {
+    transform: translateY(0);
 }
 
 .form-title {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: bold;
     color: #333;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     text-align: center;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .form-label {
-    display: block;
     font-size: 14px;
-    color: #666;
-    margin-bottom: 8px;
+    color: #555;
     font-weight: 500;
 }
 
 .form-input {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 16px;
-    border: 2px solid #e0e0e0;
+    padding: 12px;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    transition: border-color 0.3s ease;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #2196F3;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .return-info {
-    background-color: #f8f9fa;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px 0;
+    border-top: 1px dashed #eee;
+    border-bottom: 1px dashed #eee;
 }
 
 .return-label {
-    font-size: 14px;
+    font-size: 15px;
     color: #666;
-    margin-bottom: 4px;
 }
 
 .return-value {
     font-size: 18px;
-    font-weight: 600;
-    color: #00BCD4;
+    font-weight: bold;
+    color: #28a745;
 }
 
 .form-buttons {
     display: flex;
-    gap: 16px;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .form-button {
-    padding: 14px 28px;
-    font-size: 16px;
-    font-weight: 500;
+    padding: 12px 20px;
     border: none;
     border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-grow: 1;
 }
 
 .btn-primary {
-    background-color: #2196F3;
+    background-color: #007bff;
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #1976D2;
+    background-color: #0056b3;
+    transform: translateY(-2px);
 }
 
 .btn-secondary {
-    background-color: #f5f5f5;
-    color: #666;
-    border: 1px solid #e0e0e0;
+    background-color: #6c757d;
+    color: white;
 }
 
 .btn-secondary:hover {
-    background-color: #eeeeee;
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Estilos para o botão de menu toggle */
+.menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.menu-toggle:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.menu-toggle.open {
+    transform: rotate(90deg);
+}
+
+/* Estilos para a sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 250px;
+    height: 100vh; /* Garante que a sidebar ocupe 100% da altura da viewport */
+    background-color: #f8f9fa;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s ease;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; REMOVIDO para um controle mais preciso */
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+.user-info {
+    margin-bottom: 20px; /* Ajustado para dar mais controle */
+    flex-grow: 1; /* Permite que o user-info ocupe o espaço disponível, empurrando o botão para baixo */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espaçamento entre os info-items */
+}
+
+.user-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0; /* Ajustado */
+    border-bottom: 1px dashed #eee;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #555;
+}
+
+.info-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #007bff;
+}
+
+.info-value.money {
+    color: #28a745;
+}
+
+.logout-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    margin-top: auto; /* Empurra o botão para o final do flex container */
+    align-self: center; /* Centraliza o botão se houver espaço extra */
+}
+
+.logout-button:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para o conteúdo principal quando a sidebar está aberta */
+.main-content {
+    transition: margin-left 0.3s ease;
+    margin-left: 0;
+    padding-top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.main-content.shifted {
+    margin-left: 250px;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 50px;
+    padding: 0 20px;
+    width: 100%;
+}
+
+.option-block {
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+    width: 250px;
+    text-align: center;
+    border: 3px solid transparent;
+}
+
+.option-block.menino {
+    border-bottom: 5px solid #007bff;
+}
+
+.option-block.menina {
+    border-bottom: 5px solid #ff69b4;
+}
+
+.option-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.option-block.selected {
+    transform: scale(1.05);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    border: 3px solid #007bff;
+}
+
+.option-block.selected.menino {
+    border-color: #007bff;
+}
+
+.option-block.selected.menina {
+    border-color: #ff69b4;
+}
+
+.option-text {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.option-block.menino .option-text {
+    color: #007bff;
+}
+
+.option-block.menina .option-text {
+    color: #ff69b4;
+}
+
+.odds-text {
+    font-size: 24px;
+    font-weight: 600;
+    color: #666;
+}
+
+.confirm-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 15px 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
+    margin-top: 40px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+}
+
+.confirm-button.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.confirm-button.menino {
+    background-color: #007bff;
+}
+
+.confirm-button.menina {
+    background-color: #ff69b4;
+}
+
+.confirm-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Media Queries para responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+        left: -230px;
+    }
+
+    .main-content.shifted {
+        margin-left: 200px;
+    }
+
+    .container {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .option-block {
+        width: 80%;
+        max-width: 300px;
+        padding: 20px 30px;
+    }
+
+    .option-text {
+        font-size: 30px;
+    }
+
+    .odds-text {
+        font-size: 20px;
+    }
+
+    .confirm-button {
+        padding: 12px 25px;
+        font-size: 18px;
+    }
+
+    .bet-form {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .form-title {
+        font-size: 20px;
+    }
 }

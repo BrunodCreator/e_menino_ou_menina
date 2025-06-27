@@ -12,9 +12,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout_api'), # Adicione esta linha para o logout
     path('cadastro_usuario/', views.cadastro_usuario, name='cadastro_usuario'),
     # URL para obter os potes e odds (usada pelo JS para atualizar a tela)
-    path('api/potes-odds/', views.get_potes_e_odds, name='api_potes_odds'),
+    path('dados/', views.get_dados_usuario_e_odds, name='api_dados_usr_odd'),
     
     # URL para registrar uma nova aposta
-    path('api/apostas/registrar/', views.registrar_aposta, name='api_registrar_aposta')
+    path('registrar/', views.registrar_aposta, name='api_registrar_aposta')
     
 ]

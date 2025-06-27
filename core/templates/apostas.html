@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aposta - Menino ou Menina</title>
     <link rel="stylesheet" href="{% static 'css/apostas.css' %}">
+    <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
     <button class="menu-toggle" id="menuToggle">
-        ⋯
+        <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
     </button>
 
     <div class="sidebar" id="sidebar">
@@ -18,7 +20,9 @@
             
             <div class="info-item">
                 <div class="info-label">Nome</div>
-                <div class="info-value" id="userName">João Silva</div>
+                <!-- O nome do usuário será populado via JS na função carregarDados -->
+                <!--div class="info-value" id="userName">{{ usuario.get_full_name|default:usuario.nome}}</div-->
+                <div class="info-value" id="userName">Carregando...</div>
             </div>
             
             <div class="info-item">
@@ -46,11 +50,13 @@
         <div class="container">
             <div class="option-block menino" data-option="menino" data-odds="2.5">
                 <div class="option-text">MENINO</div>
-                <div class="odds-text">odd: 2.5x</div>
+                <!-- Adicionado ID para a odd do menino -->
+                <div class="odds-text" id="oddMenino">odd: 1.0x</div>
             </div>
             <div class="option-block menina" data-option="menina" data-odds="1.8">
                 <div class="option-text">MENINA</div>
-                <div class="odds-text">odd: 1.8x</div>
+                <!-- Adicionado ID para a odd da menina -->
+                <div class="odds-text" id="oddMenina">odd: 1.0x</div>
             </div>
         </div>
 
@@ -85,6 +91,19 @@
             </div>
         </div>
     </div>
+
+     <!-- Novo Modal de Mensagem/Confirmação (Substitui alert/confirm) -->
+    <div class="modal-overlay" id="messageModalOverlay">
+        <div class="bet-form" id="messageModalContent">
+            <h2 class="form-title">Mensagem</h2>
+            <p id="messageModalText" style="text-align: center; margin-bottom: 20px;"></p>
+            <div class="form-buttons">
+                <button class="form-button btn-secondary" id="messageModalCancelButton" style="display: none;">Cancelar</button>
+                <button class="form-button btn-primary" id="messageModalConfirmButton">OK</button>
+            </div>
+        </div>
+    </div>
+
 	<script src="{% static 'js/apostas.js' %}"></script>
 </body>
 </html>
