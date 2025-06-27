@@ -229,3 +229,83 @@ def cadastro_usuario(request):
                 'success': False,
                 'errors': {'non_field_errors': 'Ocorreu um erro interno ao cadastrar. Tente novamente mais tarde.'}
             }, status=500) # Erro 500 para problemas internos do servidor
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required # Se os usuários forem autenticados
+import json
+from decimal import Decimal
+
+from .models import Aposta # Importe seu modelo Aposta
+
+# View para obter os potes e odds (para o frontend buscar as informações)
+@require_http_methods(["GET"]) # Garante que só aceite requisições GET
+def get_potes_e_odds(request):
+    """
+    Retorna os totais dos potes (masculino/feminino) e as odds calculadas.
+    """
+    try:
+        # Chama o método calcular_odds do ApostaManager
+        odds_data = Aposta.objects.calcular_odds()
+        
+        # Obtém os totais dos potes também para exibir no frontend, se necessário
+        total_masculino = Aposta.objects.get_total_pote_masculino()
+        total_feminino = Aposta.objects.get_total_pote_feminino()
+
+        response_data = {
+            'total_menino': str(total_masculino),  # Converta Decimal para string
+            'total_feminino': str(total_feminino), # Converta Decimal para string
+            'odd_menino': str(odds_data['M']),     # 'M' é a chave para odd masculino
+            'odd_feminina': str(odds_data['F']),    # 'F' é a chave para odd feminino
+        }
+        return JsonResponse(response_data)
+    except Exception as e:
+        # Lidar com possíveis erros (ex: banco de dados indisponível)
+        return JsonResponse({'error': f'Ocorreu um erro: {str(e)}'}, status=500)
+
+
+# View para registrar uma nova aposta (requer autenticação e POST)
+@login_required # Garante que apenas usuários logados possam fazer apostas
+@require_http_methods(["POST"]) # Garante que só aceite requisições POST
+def registrar_aposta(request):
+    """
+    Recebe os dados da aposta via POST, valida e cria uma nova aposta.
+    """
+    try:
+        data = json.loads(request.body) # Analisa o JSON do corpo da requisição
+
+        sexo_escolha = data.get('sexo_escolha') # 'M' ou 'F'
+        valor_aposta = Decimal(data.get('valor_aposta')) # Valor em Decimal
+
+        # Validação básica
+        if not sexo_escolha or sexo_escolha not in ['M', 'F']:
+            return JsonResponse({'error': 'Escolha de sexo inválida.'}, status=400)
+        
+        if not valor_aposta or valor_aposta < Decimal('0.01'):
+            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0,01.'}, status=400)
+
+        # Cria a aposta
+        aposta = Aposta.objects.create(
+            usuario=request.user, # O usuário logado
+            sexo_escolha=sexo_escolha,
+            valor_aposta=valor_aposta,
+            # 'valor_para_pote' será calculado automaticamente no método save() do modelo Aposta
+            aposta_valida=False, # Por padrão, aposta_valida é False até o comprovante ser verificado
+            # comprovante_pagamento = (não é enviado via JSON, será em outra etapa/view se houver upload de arquivo)
+        )
+
+        # Você pode retornar os dados da aposta criada ou uma mensagem de sucesso
+        return JsonResponse({
+            'message': 'Aposta registrada com sucesso! Aguardando validação do comprovante.',
+            'aposta_id': aposta.id,
+            'sexo_escolha': aposta.get_sexo_escolha_display(), # 'Masculino' ou 'Feminino'
+            'valor_aposta': str(aposta.valor_aposta),
+            'valor_para_pote': str(aposta.valor_para_pote),
+        }, status=201) # 201 Created
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Requisição inválida: JSON malformado.'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Valor da aposta inválido. Deve ser um número.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Ocorreu um erro inesperado: {str(e)}'}, status=500)
