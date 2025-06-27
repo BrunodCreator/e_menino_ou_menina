@@ -1,7 +1,11 @@
 const blocks = document.querySelectorAll('.option-block');
-const betButton = document.getElementById('betButton');
-const selectionText = document.getElementById('selectionText');
-const selectedOption = document.getElementById('selectedOption');
+const confirmButton = document.getElementById('confirmButton');
+const modalOverlay = document.getElementById('modalOverlay');
+const selectedOptionDisplay = document.getElementById('selectedOptionDisplay');
+const betAmountInput = document.getElementById('betAmount');
+const expectedReturnElement = document.getElementById('expectedReturn');
+const placeBetButton = document.getElementById('placeBet');
+const cancelBetButton = document.getElementById('cancelBet');
 const logoutButton = document.getElementById('logoutButton');
 const totalBetElement = document.getElementById('totalBet');
 const betCountElement = document.getElementById('betCount');
@@ -11,6 +15,7 @@ const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
 
 let currentSelection = null;
+let currentOdds = 0;
 let totalBetAmount = 0;
 let betCount = 0;
 let sidebarOpen = false;
@@ -30,6 +35,7 @@ menuToggle.addEventListener('click', function() {
     }
 });
 
+// Seleção das opções
 blocks.forEach(block => {
     block.addEventListener('click', function() {
         // Remove seleção anterior
@@ -40,50 +46,81 @@ blocks.forEach(block => {
         
         // Atualiza a seleção atual
         currentSelection = this.dataset.option;
-        
-        // Mostra o texto de seleção
-        selectedOption.textContent = currentSelection.toUpperCase();
-        selectionText.classList.add('show');
+        currentOdds = parseFloat(this.dataset.odds);
         
         // Remove classes anteriores do botão e adiciona a nova
-        betButton.classList.remove('menino', 'menina');
-        betButton.classList.add(currentSelection);
+        confirmButton.classList.remove('menino', 'menina');
+        confirmButton.classList.add(currentSelection);
         
-        // Mostra o botão de aposta
-        betButton.classList.add('show');
+        // Mostra o botão de confirmar
+        confirmButton.classList.add('show');
     });
 });
 
-betButton.addEventListener('click', function() {
+// Confirmar seleção - abre modal
+confirmButton.addEventListener('click', function() {
     if (currentSelection) {
-        // Simula valor da aposta (pode ser alterado para um input real)
-        const betAmount = 10.00;
-        
-        // Atualiza os dados
-        totalBetAmount += betAmount;
-        betCount++;
-        
-        // Atualiza a interface
-        totalBetElement.textContent = `R$ ${totalBetAmount.toFixed(2).replace('.', ',')}`;
-        betCountElement.textContent = betCount;
-        lastBetElement.textContent = currentSelection.toUpperCase();
-        
-        alert(`Aposta de R$ ${betAmount.toFixed(2).replace('.', ',')} confirmada para: ${currentSelection.toUpperCase()}!`);
-        
-        // Reset da seleção
-        blocks.forEach(b => b.classList.remove('selected'));
-        selectionText.classList.remove('show');
-        betButton.classList.remove('show', 'menino', 'menina');
-        currentSelection = null;
+        selectedOptionDisplay.textContent = currentSelection.toUpperCase();
+        modalOverlay.classList.add('show');
+        betAmountInput.value = '';
+        expectedReturnElement.textContent = 'R$ 0,00';
+        betAmountInput.focus();
     }
 });
 
+// Calcular retorno esperado
+betAmountInput.addEventListener('input', function() {
+    const betAmount = parseFloat(this.value) || 0;
+    const expectedReturn = betAmount * currentOdds;
+    expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
+});
+
+// Fazer aposta
+placeBetButton.addEventListener('click', function() {
+    const betAmount = parseFloat(betAmountInput.value);
+    
+    if (!betAmount || betAmount <= 0) {
+        alert('Por favor, insira um valor válido para a aposta.');
+        return;
+    }
+    
+    // Atualiza os dados
+    totalBetAmount += betAmount;
+    betCount++;
+    
+    // Atualiza a interface
+    totalBetElement.textContent = `R$ ${totalBetAmount.toFixed(2).replace('.', ',')}`;
+    betCountElement.textContent = betCount;
+    lastBetElement.textContent = `${currentSelection.toUpperCase()} - R$ ${betAmount.toFixed(2).replace('.', ',')}`;
+    
+    alert(`Aposta de R$ ${betAmount.toFixed(2).replace('.', ',')} confirmada para: ${currentSelection.toUpperCase()}!\nRetorno esperado: R$ ${(betAmount * currentOdds).toFixed(2).replace('.', ',')}`);
+    
+    // Fecha modal e reset da seleção
+    modalOverlay.classList.remove('show');
+    blocks.forEach(b => b.classList.remove('selected'));
+    confirmButton.classList.remove('show', 'menino', 'menina');
+    currentSelection = null;
+    currentOdds = 0;
+});
+
+// Cancelar aposta
+cancelBetButton.addEventListener('click', function() {
+    modalOverlay.classList.remove('show');
+});
+
+// Fechar modal clicando fora
+modalOverlay.addEventListener('click', function(e) {
+    if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('show');
+    }
+});
+
+// Logout
 logoutButton.addEventListener('click', function() {
     if (confirm('Tem certeza que deseja sair da sua conta?')) {
-        // Aqui você pode adicionar a lógica real de logout
         alert('Logout realizado com sucesso!');
         
-        // Reset dos dados (opcional)
+        // Reset dos dados
         totalBetAmount = 0;
         betCount = 0;
         totalBetElement.textContent = 'R$ 0,00';
