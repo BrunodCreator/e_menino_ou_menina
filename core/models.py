@@ -158,7 +158,7 @@ class ApostaManager(models.Manager):
         """
         return self.filter(
             sexo_escolha='M',
-            aposta_valida=True
+            status='valida' # Filtra por status 'valida'
         ).aggregate(
             total=models.Sum('valor_para_pote')
         )['total'] or Decimal('0.00')
@@ -169,7 +169,7 @@ class ApostaManager(models.Manager):
         """
         return self.filter(
             sexo_escolha='F',
-            aposta_valida=True
+            status='valida'
         ).aggregate(
             total=models.Sum('valor_para_pote')
         )['total'] or Decimal('0.00')
@@ -185,7 +185,7 @@ class ApostaManager(models.Manager):
         Retorna o total bruto arrecadado (100% dos valores apostados validados).
         """
         return self.filter(
-            aposta_valida=True
+            status='valida'
         ).aggregate(
             total=models.Sum('valor_aposta')
         )['total'] or Decimal('0.00')
@@ -232,7 +232,7 @@ class ApostaManager(models.Manager):
         for sexo_vencedor in ['M', 'F']:
             apostas_vencedoras = self.filter(
                 sexo_escolha=sexo_vencedor,
-                aposta_valida=True
+                status='valida'
             )
             
             total_a_pagar = Decimal('0.00')
@@ -316,10 +316,19 @@ class Aposta(models.Model):
         verbose_name="Data da Aposta"
     )
 
-    aposta_valida = models.BooleanField(
-        default=False,
-        help_text="Indica se a aposta foi validada pelo administrador.",
-        verbose_name="Aposta Válida"
+    STATUS_PAYMENT = [
+        ('pendente', 'Pendente de Pagamento'),
+        ('aguardando_validação', 'Aguardado Validação'),
+        ('valida', 'Válida'),
+        ('cancelada','Cancelada'),
+        ('rejeitada', 'Rejeitada'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_PAYMENT,
+        default='pendente',
+        help_text="Status atual da aposta (ex: pendente, aguardando validação, válida).",
+        verbose_name="Status da Aposta"
     )
 
     comprovante_pagamento = models.FileField(
@@ -342,10 +351,11 @@ class Aposta(models.Model):
         """
         Retorna uma representação legível da instância da aposta.
         """
-        # CORRIGIDO: Retornando o nome completo do usuário ou username
-        user_display_name = self.usuario.get_full_name() or self.usuario.username
+        # CORRIGIDO: Acessa o campo 'nome' diretamente do objeto usuario
+        user_display_name = self.usuario.nome 
         return (f"Aposta de {user_display_name} - Palpite: {self.get_sexo_escolha_display()} "
-                f"- Valor Bruto: R${self.valor_aposta:.2f} - No Pote: R${self.valor_para_pote:.2f}")
+                f"- Valor Bruto: R${self.valor_aposta:.2f} - Status: {self.get_status_display()}") # Exibe o status
+                
 
     def save(self, *args, **kwargs):
         """
@@ -400,7 +410,7 @@ class Aposta(models.Model):
         # Soma todos os valores que foram para o pote para o mesmo sexo desta aposta
         total_apostas_mesmo_sexo = Aposta.objects.filter(
             sexo_escolha=self.sexo_escolha,
-            aposta_valida=True
+            status='valida' # FILTRA POR STATUS 'valida'
         ).aggregate(
             total=models.Sum('valor_para_pote')
         )['total'] or Decimal('0.00')
