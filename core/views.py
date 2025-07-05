@@ -1,31 +1,69 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.decorators import login_required # Se os usuários forem autenticados
+from django.db import IntegrityError
+from django.db.models import Sum, F
 import json
-from .models import Usuario # Importe o modelo Usuario
-from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError # Importa essa exceção específica
+from decimal import Decimal
 import re # Para validar o formato do telefone
+import uuid # Para gerar um TxID único
+import qrcode # Para gerar a imagem do QR Code
+import base64
+from io import BytesIO
 
-# Função auxiliar para validar o formato do telefone
-# (É uma boa prática ter funções auxiliares fora das views para reuso)
+from pix_python.pix import Pix
+from pix_python.payload import Payload
+
+from .models import Aposta 
+
+User = get_user_model()
+
 def validate_telefone_format(telefone, required_length=11):
     """
     Valida o formato do telefone brasileiro.
-    Aceita 10 ou 11 dígitos numéricos.
+    Aceita 11 dígitos numéricos.
     """
     telefone_clean = re.sub(r'\D', '', telefone) # Remove caracteres não numéricos
     return len(telefone_clean) == required_length
 
 
+def generate_pix_qrcode_base64(pix_key, amount, recipient_name="Emerson Bruno de Queiroz", recipient_city="Goiânia"):
+    """
+    Gera o QR Code PIX (BR Code) em formato base64 usando a biblioteca pix-python.
+    A chave PIX pode ser CPF, CNPJ, telefone, e-mail ou chave aleatória
+    """
+    # Gera um TxID único para esta transação (máxima 25 caracteres)
+    txid = str(uuid.uuid4()).replace('-', '')[:25]
+
+    # Inicia o objeto Pix com a chave.
+    pix = Pix(pix_key)
+
+    # Cria o payload PIX
+    payload = Payload(pix)
+    payload.set_amount(amount)
+    payload.set_txid(txid)
+    payload.set_merchant_name(recipient_name)
+    payload.set_merchant_city(recipient_city)
+
+    br_code = payload.get_br_code()
+
+    img = qrcode.make(br_code)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
 @require_http_methods(["GET"])
 def login_page(request):
     """
     Exibe a página HTML do formulário de login.
-    Aceita apenas requisições GET para carregar a página.
+    Se o usuário já estiver autenticado, redireciona para a página de apostas.
     """
+    if request.user.is_authenticated:
+        return redirect('apostas_view')
     return render(request, 'login.html')
+
 
 
 @require_http_methods(["POST"])
@@ -58,7 +96,7 @@ def login_view(request):
     if not telefone:
         errors['telefone'] = 'Telefone é obrigatório.'
     elif not validate_telefone_format(telefone): # Valida o formato usando a função auxiliar
-        errors['telefone'] = 'Formato de telefone inválido. Use DDD+número (10 ou 11 dígitos).'
+        errors['telefone'] = 'Formato de telefone inválido. Use DDD+número (11 dígitos).'
     
     if not senha:
         errors['senha'] = 'Senha é obrigatória.'
@@ -108,42 +146,7 @@ def logout_view(request):
     logout(request)
     # Retorna uma resposta JSON de sucesso, informando que o usuário foi deslogado
     # e a URL para redirecionamento (normalmente para a página inicial ou de login).
-    return JsonResponse({
-        'success': True,
-        'message': 'Deslogado com sucesso.',
-        'redirect_url': ''
-    })
-
-
-from django.db.models import Sum
-
-@login_required # Este decorador garante que apenas usuários logados podem acessar esta view.
-# Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
-def apostas_view(request):
-    """
-    Eenderiza a página de apostas com os dados iniciais do usuário
-    """
-    # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
-    # quando o usuário está logado.
-    usuario_apostas = Aposta.objects.filter(usuario=request.user)
-    total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-    quantidade_apostas = usuario_apostas.count()
-    ultima_aposta = usuario_apostas.first()
-    
-    # Cria um dicionário 'context' para passar dados para o template HTML.
-    context = {
-        'usuario': request.user, # Acessa o nome do usuário logado
-        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
-        'quantidade_apostas': quantidade_apostas,
-        'ultima_aposta': ultima_aposta,
-    }
-    # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
-    return render(request, 'apostas.html', context)
-
-
-# Obtém o modelo de usuário configurado em settings.AUTH_USER_MODEL.
-# Isso garante que estamos sempre usando o modelo de usuário correto (o seu Usuario).
-User = get_user_model()
+    return redirect('/login/')
 
 
 @require_http_methods(["GET", "POST"])
@@ -236,13 +239,34 @@ def cadastro_usuario(request):
                 'errors': {'non_field_errors': 'Ocorreu um erro interno ao cadastrar. Tente novamente mais tarde.'}
             }, status=500) # Erro 500 para problemas internos do servidor
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required # Se os usuários forem autenticados
-import json
-from decimal import Decimal
 
-from .models import Aposta # Importe seu modelo Aposta
+
+
+
+# Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
+@require_http_methods(["GET"])
+def apostas_view(request):
+    """
+    Renderiza a página de apostas com os dados iniciais do usuário
+    """
+    # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
+    # quando o usuário está logado.
+    usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
+    total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+    quantidade_apostas = usuario_apostas.count()
+    ultima_aposta = usuario_apostas.first()
+    
+    # Cria um dicionário 'context' para passar dados para o template HTML.
+    context = {
+        'usuario': request.user, # Acessa o nome do usuário logado
+        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
+        'quantidade_apostas': quantidade_apostas,
+        'ultima_aposta': ultima_aposta,
+    }
+    # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
+    return render(request, 'apostas.html', context)
+
+
 
 # View para obter os potes e odds (para o frontend buscar as informações)
 @login_required
@@ -250,6 +274,7 @@ from .models import Aposta # Importe seu modelo Aposta
 def get_dados_usuario_e_odds(request):
     """
     Retorna os totais dos potes (masculino/feminino) e as odds calculadas.
+    Além do usuário logado
     """
     try:
         # Chama o método calcular_odds do ApostaManager
@@ -259,7 +284,7 @@ def get_dados_usuario_e_odds(request):
         total_masculino = Aposta.objects.get_total_pote_masculino()
         total_feminino = Aposta.objects.get_total_pote_feminino()
 
-        usuario_apostas = Aposta.objects.filter(usuario=request.user, aposta_valida=True)
+        usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
         total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
         quantidade_apostas = usuario_apostas.count()
         ultima_aposta = usuario_apostas.order_by('-data_aposta').first() # Obter a aposta mais recente
@@ -295,63 +320,97 @@ def get_dados_usuario_e_odds(request):
         return JsonResponse({'error': f'Erro ao buscar dados: {str(e)}'}, status=500)
 
 
-# View para registrar uma nova aposta (requer autenticação e POST)
-@login_required # Garante que apenas usuários logados possam fazer apostas
-@require_http_methods(["POST"]) # Garante que só aceite requisições POST
-def registrar_aposta(request):
+
+@login_required
+@require_http_methods(["POST"])
+def iniciar_aposta_pix(request):
     """
-    Recebe os dados da aposta via POST, valida e cria uma nova aposta.
+    Recebe os dados iniciais da aposta, cria uma aposta com status 'pendente'
+    e retorna os detalhes do PIX para o frontend.
     """
     try:
-        data = json.loads(request.body) # Analisa o JSON do corpo da requisição
-
-        sexo_escolha = data.get('sexo_escolha') # 'M' ou 'F'
-        valor_aposta_str = str(data.get('valor_aposta', '0.00')) 
-        valor_aposta = Decimal(valor_aposta_str)
-
-        # Validação básica
+        data = json.loads(request.body)
+        sexo_escolha = data.get('sexo_escolha')
+        valor_aposta = Decimal(str(data.get('valor_aposta', '0.00')))
+        
         if not sexo_escolha or sexo_escolha not in ['M', 'F']:
-            return JsonResponse({'error': 'Escolha de sexo inválida.'}, status=400)
+            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0,01'}, status=400)
         
         if not valor_aposta or valor_aposta < Decimal('0.01'):
-            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0,01.'}, status=400)
-
-        # Cria a aposta
+            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
+        
         aposta = Aposta.objects.create(
-            usuario=request.user, # O usuário logado
+            usuario=request.user,
             sexo_escolha=sexo_escolha,
             valor_aposta=valor_aposta,
-            # 'valor_para_pote' será calculado automaticamente no método save() do modelo Aposta
-            aposta_valida=True, # Por padrão, aposta_valida é False até o comprovante ser verificado 
-            # comprovante_pagamento = (não é enviado via JSON, será em outra etapa/view se houver upload de arquivo)
-            #TODO alterar aposta_valida para False 
+            status='pendente',
         )
 
-        usuario_apostas = Aposta.objects.filter(usuario=request.user, aposta_valida=True)
-        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-        quantidade_apostas = usuario_apostas.count()
-        # Para a última aposta, pode usar a aposta recém-criada
-        ultima_aposta_display = f"{aposta.get_sexo_escolha_display().upper()} - R${aposta.valor_aposta:.2f}".replace('.', ',')
+        chave_pix_recebedor = "075.339.601-73"
+        nome_recebedor = "Emerson Bruno de Queiroz"
+        cidade_recebedor = "Goiânia"
+
+        qr_code_base64 = generate_pix_qrcode_base64(chave_pix_recebedor, valor_aposta, nome_recebedor, cidade_recebedor)
 
         return JsonResponse({
             'success': True,
-            'message': 'Aposta regustrada com sucesso!',
-            'aposta':{
-                'id': aposta.id,
-                'sexo_escolha': aposta.get_sexo_escolha_display(),
-                'valor_aposta': str(aposta.valor_aposta),
-                'valor_para_pote': str(aposta.valor_para_pote),
-            },
+            'message':'Aposta registrada para pagamento',
+            'aposta_id': aposta.id,
+            'valor_aposta': str(aposta.valor_aposta),
+            'chave_pix': chave_pix_recebedor,
+            'qr_code_base64': qr_code_base64
+        }, status=200)
+    
+    except Exception as e:
+        print(f"Erro ao iniciar aposta Pix: {e}")
+        return JsonResponse({'error': f'Erro ao iniciar aposta PIX: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def confirmar_pagamento_aposta(request):
+    """
+    Recebe o ID da aposta pendente (sem comprovante de arquivo),
+    e atualiza o status da aposta para 'aguardando_validacao'.
+    """
+    try:
+        data = json.loads(request.body) #Agora espera JSON, não FormData
+        aposta_id = data.get('aposta_id')
+
+        if not aposta_id:
+            return JsonResponse({'error': 'ID da aposta ausente'}, status=400)
+        
+        aposta = get_object_or_404(Aposta, id=aposta_id, usuario=request.user, status='pendente')
+
+        aposta.status = 'aguardando_validacao'
+        aposta.save()
+
+        # Recalcula e retorna os dados atualizados do usuário para o frontend
+        # Filtra por apostas com status 'valida' para os cálculos do usuário
+
+        usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
+        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+        quantidade_apostas = usuario_apostas.count()
+        ultima_aposta_obj = usuario_apostas.order_by('-data_aposta').first()
+
+        ultima_aposta_texto = "-"
+        if ultima_aposta_obj:
+            sexo_display = "Menino" if ultima_aposta_obj.sexo_escolha == 'M' else "Menina"
+            ultima_aposta_texto = f"{sexo_display} - R$ {ultima_aposta_obj.valor_aposta:.2f}".replace('.', ',')
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Aposta finalizada! Aguardando validação do pagamento.',
             'usuario_atualizado': {
                 'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
                 'quantidade_apostas': quantidade_apostas,
-                'ultima_aposta': ultima_aposta_display,
+                'ultima_aposta': ultima_aposta_texto,
             }
-        }, status=201)
-
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Dados inválidos.'}, status=400)
-    except (ValueError, TypeError):
-        return JsonResponse({'error': 'Valor da aposta inválido.'}, status=400)
+        }, status=200)
+    
+    except Aposta.DoesNotExist:
+        return JsonResponse({'error': 'Aposta pendente não encontrada ou não pertence ao usuário.'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': f'Erro inesperado: {str(e)}'}, status=500)
+        print(f"Erro ao confirmar pagamento: {e}")
+        return JsonResponse({'error': f'Erro ao confirmar pagamento: {str(e)}'}, status=500)
+
