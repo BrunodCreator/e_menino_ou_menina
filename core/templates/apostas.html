@@ -44,6 +44,9 @@
         <button class="logout-button" id="logoutButton">
             Sair da Conta
         </button>
+        <form id="logoutForm" method="POST" action="/logout/" style="display: none;">
+            {% csrf_token %}
+        </form>
     </div>
 
     <div class="main-content" id="mainContent">

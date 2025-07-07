@@ -328,10 +328,16 @@ if (modalOverlay) {
 
 // Logout
 if (logoutButton) {
-    logoutButton.addEventListener('click', async function() {
+    logoutButton.addEventListener('click', async function () {
         const confirmed = await showMessageModal('Tem certeza que deseja sair da sua conta?', true);
         if (confirmed) {
-            window.location.href = '/logout/'; 
+            const logoutForm = document.getElementById('logoutForm');
+            if (logoutForm) {
+                logoutButton.disabled = true;  // Proteção opcional
+                logoutForm.submit();
+            } else {
+                showMessageModal('Erro: Formulário de logout não encontrado.');
+            }
         }
     });
 }

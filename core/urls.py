@@ -9,7 +9,7 @@ urlpatterns = [
     path('apostas/', views.apostas_view, name='apostas_page'), 
     
     # URL para a API de logout (recebe POST ou GET do JS/botão)
-    path('logout/', views.logout_view, name='logout_api'), # Adicione esta linha para o logout
+    path('logout/', views.logout_view, name='logout'), # Adicione esta linha para o logout
     path('cadastro_usuario/', views.cadastro_usuario, name='cadastro_usuario'),
     # URL para obter os potes e odds (usada pelo JS para atualizar a tela)
     path('dados/', views.get_dados_usuario_e_odds, name='api_dados_usr_odd'),

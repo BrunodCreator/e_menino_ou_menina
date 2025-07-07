@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required # Se os usuários forem autenticados
 from django.db import IntegrityError
@@ -13,8 +13,7 @@ import qrcode # Para gerar a imagem do QR Code
 import base64
 from io import BytesIO
 
-from pix_python.pix import Pix
-from pix_python.payload import Payload
+from pixqrcodegen import Payload
 
 from .models import Aposta 
 
@@ -29,30 +28,21 @@ def validate_telefone_format(telefone, required_length=11):
     return len(telefone_clean) == required_length
 
 
-def generate_pix_qrcode_base64(pix_key, amount, recipient_name="Emerson Bruno de Queiroz", recipient_city="Goiânia"):
+def generate_pix_qrcode_base64(name ,pix_key ,value , city, txtID):
     """
     Gera o QR Code PIX (BR Code) em formato base64 usando a biblioteca pix-python.
     A chave PIX pode ser CPF, CNPJ, telefone, e-mail ou chave aleatória
     """
-    # Gera um TxID único para esta transação (máxima 25 caracteres)
-    txid = str(uuid.uuid4()).replace('-', '')[:25]
+    payload = Payload(name, pix_key, value, city, txtID)
+    brcode = payload.gerarPayload()
 
-    # Inicia o objeto Pix com a chave.
-    pix = Pix(pix_key)
+    qr_img = qrcode.make(brcode)
 
-    # Cria o payload PIX
-    payload = Payload(pix)
-    payload.set_amount(amount)
-    payload.set_txid(txid)
-    payload.set_merchant_name(recipient_name)
-    payload.set_merchant_city(recipient_city)
-
-    br_code = payload.get_br_code()
-
-    img = qrcode.make(br_code)
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+    qr_img.save(buffer, format="PNG")
+
+    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return f"data:image/png;base64,{img_b64}"
 
 @require_http_methods(["GET"])
 def login_page(request):
@@ -136,16 +126,9 @@ def login_view(request):
         }, status=400) # Status 400 indica erro na requisição do cliente
 
 
-@require_http_methods(["POST", "GET"])
+@require_POST
 def logout_view(request):
-    """
-    Desloga o usuário da sessão atual.
-    Aceita requisições POST ou GET para conveniência.
-    """
-    # logout() encerra a sessão do usuário no Django, removendo suas informações de login.
     logout(request)
-    # Retorna uma resposta JSON de sucesso, informando que o usuário foi deslogado
-    # e a URL para redirecionamento (normalmente para a página inicial ou de login).
     return redirect('/login/')
 
 

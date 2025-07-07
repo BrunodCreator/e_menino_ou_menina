@@ -12,6 +12,10 @@ dependencies = [
     "django>=4.2.21",
     "mysqlclient>=2.2.7",
     "pix-python>=1.0.1",
+    "qrcode[pil]>=7.4.2",
+    "pypix>=0.1.6",
+    "brcode>=1.2",
+    "pixqrcodegen>=0.5",
 ]
 
 [project.optional-dependencies]
