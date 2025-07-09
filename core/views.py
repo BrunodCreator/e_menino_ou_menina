@@ -51,7 +51,7 @@ def login_page(request):
     Se o usuário já estiver autenticado, redireciona para a página de apostas.
     """
     if request.user.is_authenticated:
-        return redirect('apostas_view')
+        return redirect('apostas_page')
     return render(request, 'login.html')
 
 
@@ -129,7 +129,7 @@ def login_view(request):
 @require_POST
 def logout_view(request):
     logout(request)
-    return redirect('/login/')
+    return redirect('login_page')
 
 
 @require_http_methods(["GET", "POST"])
@@ -227,6 +227,7 @@ def cadastro_usuario(request):
 
 
 # Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
+@login_required
 @require_http_methods(["GET"])
 def apostas_view(request):
     """
@@ -322,6 +323,8 @@ def iniciar_aposta_pix(request):
         if not valor_aposta or valor_aposta < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
         
+        txtID = str(uuid.uuid4()) #Cria um UUID único convertido para string
+        
         aposta = Aposta.objects.create(
             usuario=request.user,
             sexo_escolha=sexo_escolha,
@@ -333,12 +336,12 @@ def iniciar_aposta_pix(request):
         nome_recebedor = "Emerson Bruno de Queiroz"
         cidade_recebedor = "Goiânia"
 
-        qr_code_base64 = generate_pix_qrcode_base64(chave_pix_recebedor, valor_aposta, nome_recebedor, cidade_recebedor)
+        qr_code_base64 = generate_pix_qrcode_base64(chave_pix_recebedor, valor_aposta, nome_recebedor, cidade_recebedor, txtID=txtID)
 
         return JsonResponse({
             'success': True,
             'message':'Aposta registrada para pagamento',
-            'aposta_id': aposta.id,
+            'aposta_id': txtID,
             'valor_aposta': str(aposta.valor_aposta),
             'chave_pix': chave_pix_recebedor,
             'qr_code_base64': qr_code_base64
