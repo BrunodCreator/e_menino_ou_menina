@@ -43,7 +43,7 @@ def generate_pix_qrcode_base64(name ,pix_key ,value , city, txtID):
     qr_img.save(buffer, format="PNG")
 
     img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    return f"data:image/png;base64,{img_b64}"
+    return brcode, f"data:image/png;base64,{img_b64}"
 
 @require_http_methods(["GET"])
 def login_page(request):
@@ -255,53 +255,40 @@ def apostas_view(request):
 
 # View para obter os potes e odds (para o frontend buscar as informações)
 @login_required
-@require_http_methods(["GET"]) # Garante que só aceite requisições GET
+@require_http_methods(["GET"])
 def get_dados_usuario_e_odds(request):
-    """
-    Retorna os totais dos potes (masculino/feminino) e as odds calculadas.
-    Além do usuário logado
-    """
     try:
-        # Chama o método calcular_odds do ApostaManager
         odds_data = Aposta.objects.calcular_odds()
-        
-        # Obtém os totais dos potes também para exibir no frontend, se necessário
         total_masculino = Aposta.objects.get_total_pote_masculino()
         total_feminino = Aposta.objects.get_total_pote_feminino()
 
         usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
         total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
         quantidade_apostas = usuario_apostas.count()
-        ultima_aposta = usuario_apostas.order_by('-data_aposta').first() # Obter a aposta mais recente
+        ultima_aposta = usuario_apostas.order_by('-data_aposta').first()
 
-        # Formatar última aposta
         ultima_aposta_texto = "-"
         if ultima_aposta:
             sexo_display = "Menino" if ultima_aposta.sexo_escolha == 'M' else "Menina"
             ultima_aposta_texto = f"{sexo_display} - R$ {ultima_aposta.valor_aposta:.2f}".replace('.', ',')
 
-        response_data = {
-            # Dados das odds
-            'odd_menino': str(odds_data.get('M', Decimal('1.0'))), # Garante um valor padrão se a chave não existir
+        return JsonResponse({
+            'success': True,
+            'odd_menino': str(odds_data.get('M', Decimal('1.0'))),
             'odd_menina': str(odds_data.get('F', Decimal('1.0'))),
-
-            # Dados dos potes (opcional, para informação)
             'total_pote_masculino': str(total_masculino),
             'total_pote_feminino': str(total_feminino),
-
-            # Dados do usuário
             'usuario': {
                 'nome': request.user.nome,
                 'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
                 'quantidade_apostas': quantidade_apostas,
                 'ultima_aposta': ultima_aposta_texto,
             }
-        }
-
-        return JsonResponse(response_data)
+        })
     except Exception as e:
-        # Logar o erro completo para depuração
-        print(f"Erro em get_dados_usuario_e_odds: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erro em get_dados_usuario_e_odds: {e}")
         return JsonResponse({'error': f'Erro ao buscar dados: {str(e)}'}, status=500)
 
 
@@ -324,7 +311,7 @@ def iniciar_aposta_pix(request):
         if not valor_aposta or valor_aposta < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
         
-        txtID = '123'     #str(uuid.uuid4()) #Cria um UUID único convertido para string
+        txtID = '123'#str(uuid.uuid4()) #Cria um UUID único convertido para string
         
         aposta = Aposta.objects.create(
             usuario=request.user,
@@ -337,7 +324,9 @@ def iniciar_aposta_pix(request):
         nome_recebedor = "EMERSON BRUNO DE QUEIROZ"
         cidade_recebedor = "GOIANIA"
 
-        qr_code_base64 = generate_pix_qrcode_base64( nome_recebedor,chave_pix_recebedor,valor_aposta, cidade_recebedor, txtID=txtID)
+        pix_payload, qr_code_base64 = generate_pix_qrcode_base64(
+            nome_recebedor, chave_pix_recebedor, valor_aposta, cidade_recebedor, txtID
+        )
 
         return JsonResponse({
             'success': True,
@@ -345,11 +334,14 @@ def iniciar_aposta_pix(request):
             'aposta_id': txtID,
             'valor_aposta': str(aposta.valor_aposta),
             'chave_pix': chave_pix_recebedor,
+            'pix_payload': pix_payload,
             'qr_code_base64': qr_code_base64
         }, status=200)
     
     except Exception as e:
-        print(f"Erro ao iniciar aposta Pix: {e}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erro ao iniciar aposta Pix: {e}")
         return JsonResponse({'error': f'Erro ao iniciar aposta PIX: {str(e)}'}, status=500)
 
 

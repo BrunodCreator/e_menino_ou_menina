@@ -253,8 +253,8 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
     placeBetButton.addEventListener('click', async function() {
         const betAmount = parseFloat(betAmountInput.value);
 
-        if (!betAmount || betAmount <= 0) {
-            showMessageModal('Por favor, insira um valor válido para a aposta.');
+        if (!betAmount || betAmount < 0.01) {
+            showMessageModal('Por favor, insira um valor válido para a aposta (mínimo R$ 0,01).');
             return;
         }
 
@@ -267,10 +267,13 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
                 return;
             }
 
+            placeBetButton.disabled = true;
+            placeBetButton.textContent = 'Processando...';
+
             const response = await fetch('/registrar/', {
                 method: 'POST',
                 headers: {
-                    'Content-type': 'application/json',
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                 },
@@ -281,32 +284,105 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
             });
 
             const data = await response.json();
+            console.log('Response from /registrar/:', data);
+
+            placeBetButton.disabled = false;
+            placeBetButton.textContent = 'Fazer Aposta';
 
             if (response.ok && data.success) {
-                totalBetElement.textContent = data.usuario_atualizado.total_apostado;
-                betCountElement.textContent = data.usuario_atualizado.quantidade_apostas;
-                lastBetElement.textContent = data.usuario_atualizado.ultima_aposta;
+                // Store aposta_id for confirmation
+                window.currentApostaId = data.aposta_id;
 
-                showMessageModal(data.message);
+                // Show PIX modal
+                document.getElementById('pixQrCode').src = data.qr_code_base64;
+                document.getElementById('pixPayload').textContent = data.pix_payload;
+                document.getElementById('pixKey').textContent = data.chave_pix;
+                document.getElementById('pixValue').textContent = `R$ ${data.valor_aposta}`;
+                document.getElementById('pixModalOverlay').classList.add('show');
 
-                await carregarDados(); // Recarrega os dados após a aposta
+                // Close bet modal and reset UI
+                modalOverlay.classList.remove('show');
+                blocks.forEach(b => b.classList.remove('selected'));
+                confirmButton.classList.remove('show', 'menino', 'menina');
+                currentSelection = null;
+                currentOdds = 0;
+
+                await carregarDados(); // Refresh odds
             } else {
-                showMessageModal(data.error || 'Erro ao registrar aposta');
+                showMessageModal(data.error || 'Erro ao registrar aposta. Tente novamente.');
             }
 
         } catch (error) {
             console.error('Erro ao processar aposta:', error);
+            placeBetButton.disabled = false;
+            placeBetButton.textContent = 'Fazer Aposta';
             showMessageModal('Erro ao processar aposta. Tente novamente.');
         }
-
-        modalOverlay.classList.remove('show');
-        blocks.forEach(b => b.classList.remove('selected'));
-        confirmButton.classList.remove('show', 'menino', 'menina');
-        currentSelection = null;
-        currentOdds = 0;
     });
 }
 
+// Confirm payment
+document.getElementById('copyPixButton').addEventListener('click', function() {
+    const pixPayload = document.getElementById('pixPayload').textContent;
+    navigator.clipboard.writeText(pixPayload).then(() => {
+        showMessageModal('Código PIX copiado para a área de transferência!');
+    }).catch(err => {
+        console.error('Erro ao copiar código PIX:', err);
+        showMessageModal('Erro ao copiar código PIX.');
+    });
+});
+
+// New button to confirm payment
+document.getElementById('confirmPixPayment').addEventListener('click', async function() {
+    if (!window.currentApostaId) {
+        showMessageModal('Erro: ID da aposta não encontrado.');
+        return;
+    }
+
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+            document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+
+        const response = await fetch('/confirmar_pagamento_aposta/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                aposta_id: window.currentApostaId
+            })
+        });
+
+        const data = await response.json();
+        console.log('Response from /confirmar_pagamento_aposta/:', data);
+
+        if (response.ok && data.success) {
+            showMessageModal(data.message);
+            document.getElementById('pixModalOverlay').classList.remove('show');
+            await carregarDados(); // Refresh user data
+        } else {
+            showMessageModal(data.error || 'Erro ao confirmar pagamento.');
+        }
+
+    } catch (error) {
+        console.error('Erro ao confirmar pagamento:', error);
+        showMessageModal('Erro ao confirmar pagamento. Tente novamente.');
+    }
+});
+
+// Close PIX modal
+document.getElementById('closePixModal').addEventListener('click', function() {
+    document.getElementById('pixModalOverlay').classList.remove('show');
+});
+
+// Close PIX modal when clicking outside
+document.getElementById('pixModalOverlay').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('pixModalOverlay')) {
+        document.getElementById('pixModalOverlay').classList.remove('show');
+    }
+});
 
 // Cancelar aposta
 if (cancelBetButton && modalOverlay) {

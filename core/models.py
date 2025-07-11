@@ -331,14 +331,6 @@ class Aposta(models.Model):
         verbose_name="Status da Aposta"
     )
 
-    comprovante_pagamento = models.FileField(
-        upload_to='comprovantes/',
-        null=True,
-        blank=True,
-        help_text="Anexe o comprovante de pagamento (imagem ou PDF).",
-        verbose_name="Comprovante de Pagamento"
-    )
-
     # Atribui o manager personalizado à classe Aposta
     objects = ApostaManager()
 

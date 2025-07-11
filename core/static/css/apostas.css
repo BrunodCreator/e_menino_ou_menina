@@ -426,3 +426,20 @@ html, body {
         font-size: 20px;
     }
 }
+
+/* Add to the end of apostas.css */
+#pixQrCode {
+    max-width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin: 10px auto;
+}
+
+#pixPayload {
+    font-family: monospace;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
