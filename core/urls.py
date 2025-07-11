@@ -15,6 +15,6 @@ urlpatterns = [
     path('dados/', views.get_dados_usuario_e_odds, name='api_dados_usr_odd'),
     
     # URL para registrar uma nova aposta
-    path('registrar/', views.iniciar_aposta_pix, name='api_iniciar_aposta_pix')
+    path('registrar/', views.iniciar_aposta_pix, name='iniciar_aposta_pix')
     
 ]
