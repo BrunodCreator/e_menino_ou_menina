@@ -33,7 +33,8 @@ def generate_pix_qrcode_base64(name ,pix_key ,value , city, txtID):
     Gera o QR Code PIX (BR Code) em formato base64 usando a biblioteca pix-python.
     A chave PIX pode ser CPF, CNPJ, telefone, e-mail ou chave aleatória
     """
-    payload = Payload(name, pix_key, value, city, txtID)
+    value_str = f"{value:.2f}"
+    payload = Payload(name, pix_key, value_str, city, txtID)
     brcode = payload.gerarPayload()
 
     qr_img = qrcode.make(brcode)
@@ -318,12 +319,12 @@ def iniciar_aposta_pix(request):
         valor_aposta = Decimal(str(data.get('valor_aposta', '0.00')))
         
         if not sexo_escolha or sexo_escolha not in ['M', 'F']:
-            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0,01'}, status=400)
+            return JsonResponse({'error': 'Escolha de sexo inválida. Deve ser "M" ou "F".'}, status=400)
         
         if not valor_aposta or valor_aposta < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
         
-        txtID = str(uuid.uuid4()) #Cria um UUID único convertido para string
+        txtID = '123'     #str(uuid.uuid4()) #Cria um UUID único convertido para string
         
         aposta = Aposta.objects.create(
             usuario=request.user,
@@ -332,11 +333,11 @@ def iniciar_aposta_pix(request):
             status='pendente',
         )
 
-        chave_pix_recebedor = "075.339.601-73"
-        nome_recebedor = "Emerson Bruno de Queiroz"
-        cidade_recebedor = "Goiânia"
+        chave_pix_recebedor = "07533960173"
+        nome_recebedor = "EMERSON BRUNO DE QUEIROZ"
+        cidade_recebedor = "GOIANIA"
 
-        qr_code_base64 = generate_pix_qrcode_base64(chave_pix_recebedor, valor_aposta, nome_recebedor, cidade_recebedor, txtID=txtID)
+        qr_code_base64 = generate_pix_qrcode_base64( nome_recebedor,chave_pix_recebedor,valor_aposta, cidade_recebedor, txtID=txtID)
 
         return JsonResponse({
             'success': True,

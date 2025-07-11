@@ -135,7 +135,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / ".core",  # Onde o Django procurará arquivos estáticos
+    BASE_DIR / 'core' / 'static',  # Onde o Django procurará arquivos estáticos
 ]
 
 # Default primary key field type
