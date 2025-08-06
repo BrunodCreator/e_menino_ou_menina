@@ -39,7 +39,7 @@ html, body {
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    width: 90%;
+    width: 80%;
     max-width: 400px;
     transform: translateY(20px);
     transition: transform 0.3s ease;
@@ -383,56 +383,87 @@ html, body {
 
 /* Media Queries para responsividade */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 200px;
-        left: -230px;
-    }
+  .sidebar {
+    width: 200px;
+    left: -230px;
+  }
 
-    .main-content.shifted {
-        margin-left: 200px;
-    }
+  .main-content.shifted {
+    margin-left: 200px;
+  }
 
-    .container {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
+  .container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 0 10px;
+  }
 
-    .option-block {
-        width: 80%;
-        max-width: 300px;
-        padding: 20px 30px;
-    }
+  .option-block {
+    width: 100%;
+    max-width: 300px;
+    padding: 20px 30px;
+  }
 
-    .option-text {
-        font-size: 30px;
-    }
+  .option-text {
+    font-size: 30px;
+  }
 
-    .odds-text {
-        font-size: 20px;
-    }
+  .odds-text {
+    font-size: 20px;
+  }
 
-    .confirm-button {
-        padding: 12px 25px;
-        font-size: 18px;
-    }
+  .confirm-button {
+    padding: 12px 25px;
+    font-size: 18px;
+  }
 
-    .bet-form {
-        width: 95%;
-        padding: 20px;
-    }
+  /* Make your modal narrower on phones */
+  .bet-form {
+    width: 90%;
+    max-width: 360px;    /* was 500px */
+    padding: 20px;       /* a bit less padding */
+  }
 
-    .form-title {
-        font-size: 20px;
-    }
+  /* Remove the old min-width so it can shrink */
+  #pixModalOverlay .bet-form {
+    /* no min-width here */
+  }
+
+  .form-title {
+    font-size: 20px;
+  }
+
+  .form-input,
+  .form-button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Keep scroll inside if it grows too tall */
+  .modal-overlay .bet-form {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 }
 
-/* Add to the end of apostas.css */
+/* Even tighter on very small phones */
+@media (max-width: 480px) {
+  .form-title     { font-size: 18px; }
+  .option-text    { font-size: 26px; }
+  .odds-text      { font-size: 18px; }
+  .form-input,
+  .form-button    { font-size: 14px; padding: 10px; }
+  .bet-form       { padding: 15px; }
+}
+
+/* Add these styles at the end of your CSS file to make sure the QR code displays properly in the modal */
 #pixQrCode {
-    max-width: 200px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin: 10px auto;
+    max-width: 450px; /* Set a maximum width for the QR code */
+    width: 100%;      /* Ensure the QR code takes the full width of its container */
+    height: auto;     /* Maintain the aspect ratio of the image */
+    display: block;   /* Center it inside the container */
+    margin: 0 auto;   /* Center the image horizontally */
 }
 
 #pixPayload {
@@ -443,3 +474,4 @@ html, body {
     border-radius: 5px;
     font-size: 14px;
 }
+
