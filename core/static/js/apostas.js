@@ -293,11 +293,26 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
                 // Store aposta_id for confirmation
                 window.currentApostaId = data.aposta_id;
 
-                // Show PIX modal
-                document.getElementById('pixQrCode').src = data.qr_code_base64;
+                const container = document.getElementById('pixQrCodeContainer');
+                container.innerHTML = '';  // wipe out any old QR
+                const canvas = document.createElement('canvas'); 
+                container.appendChild(canvas);
+
+                QRCode.toCanvas(canvas, data.pix_payload, {
+                width: 300,   // size in px; tweak as you like
+                margin: 1     // small white border
+                }, err => {
+                if (err) {
+                    console.error('QR gen error:', err);
+                    showMessageModal('Erro ao gerar QR Code.');
+                }
+                });
+
                 document.getElementById('pixPayload').textContent = data.pix_payload;
                 document.getElementById('pixKey').textContent = data.chave_pix;
                 document.getElementById('pixValue').textContent = `R$ ${data.valor_aposta}`;
+                
+                // Show the PIX modal after content is updated
                 document.getElementById('pixModalOverlay').classList.add('show');
 
                 // Close bet modal and reset UI
@@ -388,6 +403,15 @@ document.getElementById('pixModalOverlay').addEventListener('click', function(e)
 if (cancelBetButton && modalOverlay) {
     cancelBetButton.addEventListener('click', function() {
         modalOverlay.classList.remove('show');
+    });
+}
+
+// Fechar modal clicando fora
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) {
+            modalOverlay.classList.remove('show');
+        }
     });
 }
 

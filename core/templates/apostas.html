@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aposta - Menino ou Menina</title>
+    <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/apostas.css' %}">
     <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -113,7 +114,7 @@
             <h2 class="form-title">Pagar Aposta via PIX</h2>
             <div class="form-group">
                 <label class="form-label">QR Code:</label>
-                <img id="pixQrCode" src="" alt="PIX QR Code" style="max-width: 200px; display: block; margin: 0 auto;">
+                <div id="pixQrCodeContainer"></div>
             </div>
             <div class="form-group">
                 <label class="form-label">Código PIX:</label>
@@ -135,6 +136,7 @@
         </div>
     </div>
 
+    
 	<script src="{% static 'js/apostas.js' %}"></script>
 </body>
 </html>
