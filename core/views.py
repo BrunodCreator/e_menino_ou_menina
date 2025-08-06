@@ -9,11 +9,9 @@ import json
 from decimal import Decimal
 import re # Para validar o formato do telefone
 import uuid # Para gerar um TxID único
-import qrcode # Para gerar a imagem do QR Code
-import base64
-from io import BytesIO
-
 from pixqrcodegen import Payload
+from io import StringIO
+import sys
 
 from .models import Aposta 
 
@@ -28,22 +26,23 @@ def validate_telefone_format(telefone, required_length=11):
     return len(telefone_clean) == required_length
 
 
-def generate_pix_qrcode_base64(name ,pix_key ,value , city, txtID):
-    """
-    Gera o QR Code PIX (BR Code) em formato base64 usando a biblioteca pix-python.
-    A chave PIX pode ser CPF, CNPJ, telefone, e-mail ou chave aleatória
-    """
+def generate_pix_payload(name, pix_key, value, city, txtID):
+    # Format the value
     value_str = f"{value:.2f}"
     payload = Payload(name, pix_key, value_str, city, txtID)
-    brcode = payload.gerarPayload()
 
-    qr_img = qrcode.make(brcode)
+    # Capture the printed output
+    old_stdout = sys.stdout
+    buf     = StringIO()
+    sys.stdout = buf
+    try:
+        payload.gerarPayload()      # this prints the BR-Code
+    finally:
+        sys.stdout = old_stdout     # restore
 
-    buffer = BytesIO()
-    qr_img.save(buffer, format="PNG")
-
-    img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    return brcode, f"data:image/png;base64,{img_b64}"
+    # Grab and trim the string
+    payload = buf.getvalue().strip()
+    return payload
 
 @require_http_methods(["GET"])
 def login_page(request):
@@ -197,7 +196,7 @@ def cadastro_usuario(request):
             # Cria o usuário usando o gerenciador customizado (UsuarioManager).
             # O 'senha' aqui é o argumento que seu create_user no Manager espera,
             # e ele internamente chama set_password para hashear.
-            user = User.objects.create_user(telefone=telefone, nome=nome, senha=senha, chave_pix=chave_pix)
+            user = User.objects.create_user(telefone=telefone, nome=nome, chave_pix=chave_pix, password=senha )
             
             # Se o usuário foi criado com sucesso, retorna uma resposta de sucesso.
             return JsonResponse({
@@ -311,8 +310,6 @@ def iniciar_aposta_pix(request):
         if not valor_aposta or valor_aposta < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
         
-        txtID = '123'#str(uuid.uuid4()) #Cria um UUID único convertido para string
-        
         aposta = Aposta.objects.create(
             usuario=request.user,
             sexo_escolha=sexo_escolha,
@@ -323,19 +320,21 @@ def iniciar_aposta_pix(request):
         chave_pix_recebedor = "07533960173"
         nome_recebedor = "EMERSON BRUNO DE QUEIROZ"
         cidade_recebedor = "GOIANIA"
+        
 
-        pix_payload, qr_code_base64 = generate_pix_qrcode_base64(
-            nome_recebedor, chave_pix_recebedor, valor_aposta, cidade_recebedor, txtID
+        
+        pix_payload = generate_pix_payload(
+            nome_recebedor, chave_pix_recebedor, valor_aposta, cidade_recebedor, str(aposta.id)
         )
-
+        print(pix_payload)
+        
         return JsonResponse({
             'success': True,
             'message':'Aposta registrada para pagamento',
-            'aposta_id': txtID,
+            'aposta_id': str(aposta.id),
             'valor_aposta': str(aposta.valor_aposta),
-            'chave_pix': chave_pix_recebedor,
-            'pix_payload': pix_payload,
-            'qr_code_base64': qr_code_base64
+            'chave_pix': str(chave_pix_recebedor),
+            'pix_payload': str(pix_payload)
         }, status=200)
     
     except Exception as e:
