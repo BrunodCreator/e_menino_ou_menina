@@ -1,6 +1,6 @@
 # core/models.py
 
-from django.db import models
+from django.db import models                                                
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
@@ -9,27 +9,29 @@ class UsuarioManager(BaseUserManager):
     Manager customizado para criar usuários e superusuários.
     """
 
-    def create_user(self, telefone, nome, senha=None, chave_pix=None, **extra_fields):
+    def create_user(self, telefone, nome,  chave_pix, password=None, **extra_fields):
         """
         Cria e salva um usuário comum.
         - telefone e nome são obrigatórios.
         - senha (texto puro) será passada para set_password().
-        - chave_pix é opcional.
+        - chave_pix é obrigatório.
         """
         if not telefone:
             raise ValueError("O campo 'telefone' deve ser preenchido.")
         if not nome:
             raise ValueError("O campo 'nome' deve ser preenchido.")
+        if not chave_pix:
+            raise ValueError("O campo chave-PIX deve ser preenchido")
 
         # normaliza o telefone se necessário (remover espaços, traços, etc.)
         telefone = telefone.strip()
 
         user = self.model(telefone=telefone, nome=nome, chave_pix=chave_pix, **extra_fields)
-        user.set_password(senha)
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, telefone, nome, senha=None, **extra_fields):
+    def create_superuser(self, telefone, nome, chave_pix, password=None, **extra_fields):
         """
         Cria e salva um superusuário com is_staff=True e is_superuser=True.
         """
@@ -42,7 +44,7 @@ class UsuarioManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superusuário deve ter is_superuser=True.')
 
-        return self.create_user(telefone, nome, senha, **extra_fields)
+        return self.create_user(telefone, nome, chave_pix, password, **extra_fields)
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
@@ -71,12 +73,12 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         help_text="Nome completo do participante"
     )
 
-    # Removemos o campo 'senha = CharField(...)'
+    # Removi o campo 'senha = CharField(...)'
     # porque AbstractBaseUser já fornece:
     #     password = models.CharField(_('password'), max_length=128)
     # então não precisamos declará-lo novamente.
     #
-    # Se quiséssemos renomear para 'senha', teríamos que
+    # Para renomear para 'senha', tem que
     # configurar explicitamente e redefinir toda a lógica.
     # É mais simples deixar o nome padrão 'password'.
 
@@ -95,8 +97,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     chave_pix = models.CharField(
         verbose_name='Chave PIX',
         max_length=128,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         help_text='Chave PIX para o pagamento dos ganhadores'
     )
 
@@ -116,14 +118,14 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     # O campo last_login vem de AbstractBaseUser
 
     USERNAME_FIELD = 'telefone'
-    REQUIRED_FIELDS = ['nome']  # além de telefone, deve informar nome
+    REQUIRED_FIELDS = ['nome', 'chave_pix']  # além de telefone, deve informar nome
 
     objects = UsuarioManager()
 
     class Meta:
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
-        ordering = ['nome']
+        ordering = ['id']
         db_table = 'core_usuario'
 
     def __str__(self):
@@ -136,6 +138,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             return f"({self.telefone[:2]}) {self.telefone[2:6]}-{self.telefone[6:]}"
         return self.telefone
 
+    #TODO depois olhar se quero escrever uma função para desabilitar o usuário
     def pode_apostar(self):
         return self.ativo
 
@@ -144,7 +147,7 @@ from django.db import models
 from django.conf import settings
 from decimal import Decimal
 from django.core.validators import MinValueValidator
-from django.db.models import Sum, F # Certifique-se de que Sum e F estão importados
+from django.db.models import Sum, F 
 
 class ApostaManager(models.Manager):
     """
