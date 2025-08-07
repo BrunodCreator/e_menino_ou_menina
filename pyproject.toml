@@ -16,6 +16,7 @@ dependencies = [
     "pypix>=0.1.6",
     "brcode>=1.2",
     "pixqrcodegen>=0.5",
+    "pillow>=10.4.0",
 ]
 
 [project.optional-dependencies]
