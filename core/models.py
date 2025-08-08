@@ -145,7 +145,8 @@ from django.db import models
 from django.conf import settings
 from decimal import Decimal
 from django.core.validators import MinValueValidator
-from django.db.models import Sum, F 
+from django.db.models import Sum
+from decimal import ROUND_HALF_UP
 
 class ApostaManager(models.Manager):
     """
@@ -240,7 +241,7 @@ class ApostaManager(models.Manager):
             for aposta in apostas_vencedoras:
                 # O pagamento é calculado com base no valor BRUTO da aposta
                 # multiplicado pela odd atual para o sexo vencedor.
-                pagamento = aposta.valor_aposta * odds.get(sexo_vencedor, Decimal('1.00'))
+                pagamento = aposta.valor_para_pote * odds.get(sexo_vencedor, Decimal('1.00'))
                 total_a_pagar += pagamento
             
             cenarios.append({
@@ -307,7 +308,7 @@ class Aposta(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
         blank=True,
-        null=True,
+        null=False,
         help_text="Valor líquido da contribuição após a dedução da taxa.",
         verbose_name="Valor para o Pote"
     )
@@ -319,7 +320,7 @@ class Aposta(models.Model):
 
     STATUS_PAYMENT = [
         ('pendente', 'Pendente de Pagamento'),
-        ('aguardando_validação', 'Aguardado Validação'),
+        ('aguardando_validacao', 'Aguardando Validação'),
         ('valida', 'Válida'),
         ('cancelada','Cancelada'),
         ('rejeitada', 'Rejeitada'),
@@ -339,6 +340,11 @@ class Aposta(models.Model):
         verbose_name = "Aposta"
         verbose_name_plural = "Apostas"
         ordering = ['-data_aposta'] # Ordena as apostas da mais recente para a mais antiga
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['sexo_escolha', 'status']),
+            models.Index(fields=['-data_aposta']),
+         ]
 
     def __str__(self):
         """
@@ -349,6 +355,7 @@ class Aposta(models.Model):
         return (f"Aposta de {user_display_name} - Palpite: {self.get_sexo_escolha_display()} "
                 f"- Valor Bruto: R${self.valor_aposta:.2f} - Status: {self.get_status_display()}") # Exibe o status
                 
+    
 
     def save(self, *args, **kwargs):
         """
@@ -356,7 +363,7 @@ class Aposta(models.Model):
         """
         # Calcula 75% do valor_aposta antes de salvar
         if self.valor_aposta is not None:
-            self.valor_para_pote = (self.valor_aposta * Decimal('0.75')).quantize(Decimal('0.01'))
+            self.valor_para_pote = (self.valor_aposta * Decimal('0.75')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         else:
             self.valor_para_pote = Decimal('0.00')
 

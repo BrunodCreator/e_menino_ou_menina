@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm, AuthenticationForm as DjangoAuthenticationForm
@@ -93,3 +92,63 @@ class UsuarioAdmin(UserAdmin):
 # 5. Sobrescreva o formulário de autenticação padrão do Admin
 # Isso é crucial para que o painel de admin use seu campo 'telefone' para login
 admin.site.login_form = CustomAdminAuthenticationForm
+
+
+from django.contrib import admin
+from .models import Aposta
+
+def validar_aposta(modeladmin, request, queryset):
+    queryset.update(status='valida')
+
+
+def rejeitar_aposta(modeladmin, request, queyset):
+    queyset.update(status='rejeitada')
+
+
+
+@admin.register(Aposta)
+class ApostaAdmin(admin.ModelAdmin):
+    
+    list_display = ('usuario', 'data_aposta','sexo_escolha', 'valor_aposta', 'status')
+
+    list_filter = ('status', 'sexo_escolha')
+
+    search_fields = ('usuario__nome', 'status')
+
+    ordering = ('-data_aposta',)
+
+    fieldsets = (
+    (None, {'fields': ('usuario', 'sexo_escolha', 'valor_aposta', 'valor_para_pote', 'status')}),
+    ('Opções de Status', {'fields': ('ativo', 'is_active', 'is_staff', 'is_superuser')}),
+    )
+
+      # Exemplo de como você pode adicionar o relatório em uma página customizada
+    def changelist_view(self, request, extra_context=None):
+        # Pega o relatório financeiro
+        relatorio = Aposta.objects.get_relatorio_financeiro()
+        # Adiciona o relatório financeiro ao contexto
+        extra_context = extra_context or {}
+        extra_context['relatorio_financeiro'] = relatorio
+
+        return super().changelist_view(request, extra_context=extra_context)
+    
+    actions = [validar_aposta, rejeitar_aposta]
+
+    def save_model(self, request, obj, form, change):
+        """
+        Override save_model to handle any custom saving logic.
+        This can be used to log changes or perform other actions before saving.
+        """
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        """
+        Customize the queryset for filtering or limiting the records shown.
+        """
+        queryset = super().get_queryset(request)
+
+        if not request.user.is_staff:
+            queryset = queryset.filter(usuario=request.user)
+        return queryset
+    
+
