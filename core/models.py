@@ -143,15 +143,18 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP, getcontext
 from django.core.validators import MinValueValidator
 from django.db.models import Sum
-from decimal import ROUND_HALF_UP
+
+def money(x: Decimal) -> Decimal:
+    return (x or Decimal('0')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
 
 class ApostaManager(models.Manager):
     """
     Manager personalizado para a classe Aposta, contendo métodos
-    para cálculos financeiros relacionados às apostas.
+    para cálculos sobre valóres líquidos relacionados às apostas.
     """
     
     def get_total_pote_masculino(self):
@@ -162,7 +165,7 @@ class ApostaManager(models.Manager):
             sexo_escolha='M',
             status='valida' # Filtra por status 'valida'
         ).aggregate(
-            total=models.Sum('valor_para_pote')
+            total=Sum('valor_para_pote')
         )['total'] or Decimal('0.00')
     
     def get_total_pote_feminino(self):
@@ -173,12 +176,12 @@ class ApostaManager(models.Manager):
             sexo_escolha='F',
             status='valida'
         ).aggregate(
-            total=models.Sum('valor_para_pote')
+            total=Sum('valor_para_pote')
         )['total'] or Decimal('0.00')
     
     def get_total_pote(self):
         """
-        Retorna o total geral disponível nos potes para pagamentos.
+        Retorna o total geral disponível para pagar vencedores
         """
         return self.get_total_pote_masculino() + self.get_total_pote_feminino()
     
@@ -189,17 +192,18 @@ class ApostaManager(models.Manager):
         return self.filter(
             status='valida'
         ).aggregate(
-            total=models.Sum('valor_aposta')
+            total=Sum('valor_aposta')
         )['total'] or Decimal('0.00')
     
     def get_total_para_pais(self):
         """
         Retorna o total destinado aos pais (25% do total bruto arrecadado).
         """
-        return (self.get_total_arrecadado_bruto() * Decimal('0.25')).quantize(Decimal('0.01'))
+        return money(self.get_total_arrecadado_bruto() * Decimal('0.25'))
     
     def calcular_odds(self):
         """
+        Pari-mutuel: odd(sexo) = pote_total / pote_do_sexo.
         Calcula e retorna as odds atuais para cada sexo (Menino/Menina)
         com base nos valores presentes nos potes.
         """
@@ -223,14 +227,13 @@ class ApostaManager(models.Manager):
     
     def validar_balanco_financeiro(self):
         """
-        MÉTODO CRÍTICO: Valida se é possível pagar todos os ganhadores
-        em cada cenário (Menino vence ou Menina vence) com o pote atual.
+        MÉTODO CRÍTICO: Verifica se o pote cobre Todos os pagamentos em cada cenário.
+        Pagamento = valor_para_porte * odd(sexo_vencedor).
         """
         odds = self.calcular_odds()
         total_pote = self.get_total_pote()
         
         cenarios = []
-        
         for sexo_vencedor in ['M', 'F']:
             apostas_vencedoras = self.filter(
                 sexo_escolha=sexo_vencedor,
@@ -238,20 +241,18 @@ class ApostaManager(models.Manager):
             )
             
             total_a_pagar = Decimal('0.00')
+
             for aposta in apostas_vencedoras:
-                # O pagamento é calculado com base no valor BRUTO da aposta
-                # multiplicado pela odd atual para o sexo vencedor.
-                pagamento = aposta.valor_para_pote * odds.get(sexo_vencedor, Decimal('1.00'))
-                total_a_pagar += pagamento
+                total_a_pagar += aposta.valor_para_pote * odds[sexo_vencedor]    
             
+            total_a_pagar = money(total_a_pagar)
             cenarios.append({
                 'sexo': sexo_vencedor,
-                'total_a_pagar': total_a_pagar.quantize(Decimal('0.01')),
-                'pote_disponivel': total_pote.quantize(Decimal('0.01')),
-                'deficit': max(Decimal('0.00'), total_a_pagar - total_pote).quantize(Decimal('0.01')),
-                'ok': total_a_pagar <= total_pote
+                'total_a_pagar': total_a_pagar,
+                'pote_disponivel': money(total_pote),
+                'deficit': money(max(Decimal('0.00'), total_a_pagar - total_pote)),
+                'ok': total_a_pagar <= total_pote,
             })
-        
         return cenarios
     
     def get_relatorio_financeiro(self):
@@ -259,11 +260,12 @@ class ApostaManager(models.Manager):
         Retorna um relatório completo da situação financeira das apostas.
         """
         return {
-            'total_arrecadado_bruto': self.get_total_arrecadado_bruto().quantize(Decimal('0.01')),
-            'total_para_pais': self.get_total_para_pais().quantize(Decimal('0.01')),
-            'total_pote_disponivel': self.get_total_pote().quantize(Decimal('0.01')),
-            'pote_masculino': self.get_total_pote_masculino().quantize(Decimal('0.01')),
-            'pote_feminino': self.get_total_pote_feminino().quantize(Decimal('0.01')),
+            'total_arrecadado_bruto': money(self.get_total_arrecadado_bruto()),
+            'total_para_pais': money(self.get_total_para_pais()),
+
+            'total_pote_disponivel': money(self.get_total_pote()),
+            'pote_masculino': money(self.get_total_pote_masculino()),
+            'pote_feminino': money(self.get_total_pote_feminino()),
             'odds_atuais': self.calcular_odds(),
             'balanco_cenarios': self.validar_balanco_financeiro(),
         }
@@ -347,13 +349,7 @@ class Aposta(models.Model):
          ]
 
     def __str__(self):
-        """
-        Retorna uma representação legível da instância da aposta.
-        """
-        # CORRIGIDO: Acessa o campo 'nome' diretamente do objeto usuario
-        user_display_name = self.usuario.nome 
-        return (f"Aposta de {user_display_name} - Palpite: {self.get_sexo_escolha_display()} "
-                f"- Valor Bruto: R${self.valor_aposta:.2f} - Status: {self.get_status_display()}") # Exibe o status
+        return f"Aposta de {self.usuario.nome} - {self.get_sexo_escolha_display()} - {self.get_status_display()}"
                 
     
 
@@ -363,16 +359,16 @@ class Aposta(models.Model):
         """
         # Calcula 75% do valor_aposta antes de salvar
         if self.valor_aposta is not None:
-            self.valor_para_pote = (self.valor_aposta * Decimal('0.75')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.valor_para_pote = money(self.valor_aposta * Decimal('0.75'))
         else:
             self.valor_para_pote = Decimal('0.00')
 
         super().save(*args, **kwargs)
 
     @property
-    def odd_da_aposta(self):
+    def odd_da_aposta(self) -> Decimal:
         """
-        Retorna a odd atual para a escolha desta aposta.
+        Odd pari-mutuel atual do sexo escolhido
         """
         try:
             # Acessa o manager através da instância do modelo para obter as odds
@@ -384,43 +380,32 @@ class Aposta(models.Model):
             return Decimal('1.00')  # Fallback seguro
 
     @property
-    def retorno_potencial(self):
+    def retorno_potencial(self) -> Decimal:
         """
-        Calcula o retorno potencial desta aposta com base no valor bruto
+        Calcula o retorno potencial desta aposta com base no valor líquido
         apostado e nas odds atuais.
         """
-        return (self.valor_aposta * self.odd_da_aposta).quantize(Decimal('0.01'))
+        return money(self.valor_para_pote * self.odd_da_aposta)
 
-    @property
-    def retorno_real_possivel(self):
-        """
-        Calcula o retorno potencial desta aposta com base no valor
-        que efetivamente foi para o pote e nas odds atuais.
-        Este valor é mais realista para a capacidade de pagamento do sistema.
-        """
-        return (self.valor_para_pote * self.odd_da_aposta).quantize(Decimal('0.01'))
 
-    def validar_pagamento_possivel(self):
+    def validar_pagamento_possivel(self) -> bool:
         """
-        Valida se o pagamento desta aposta específica seria possível
-        dada a situação atual do pote total e das outras apostas do mesmo sexo.
+        Verifica se o sistema conseguiria pagar ESTA aposta
+        com base no pote total e nas odds atuais (todos líquidos).
         """
         total_pote = Aposta.objects.get_total_pote()
-        
-        # Soma todos os valores que foram para o pote para o mesmo sexo desta aposta
-        total_apostas_mesmo_sexo = Aposta.objects.filter(
-            sexo_escolha=self.sexo_escolha,
-            status='valida' # FILTRA POR STATUS 'valida'
-        ).aggregate(
-            total=models.Sum('valor_para_pote')
-        )['total'] or Decimal('0.00')
-        
-        if total_apostas_mesmo_sexo > Decimal('0.00'):
-            # Calcula a odd real baseada no pote total e no total apostado para este sexo
-            odd_real = (total_pote / total_apostas_mesmo_sexo).quantize(Decimal('0.01'))
-            # Calcula o pagamento necessário para esta aposta com a odd real
-            pagamento_necessario = (self.valor_aposta * odd_real).quantize(Decimal('0.01'))
-            # Verifica se o pagamento necessário é menor ou igual ao pote total disponível
+
+        total_mesmo_sexo = (
+            Aposta.objects.filter(sexo_escolha=self.sexo_escolha, status='valida')
+            .aggregate(total=Sum('valor_para_pote'))['total']
+            or Decimal('0.00')
+        )
+
+        if total_mesmo_sexo > Decimal('0.00'):
+            odd_real = money(total_pote / total_mesmo_sexo)
+            pagamento_necessario = money(self.valor_para_pote * odd_real)
             return pagamento_necessario <= total_pote
-        
-        return True # Se não há apostas para o mesmo sexo, assume-se que é possível pagar (ou não há o que pagar)
+
+        # Sem outras apostas do mesmo sexo → nada a pagar além desta
+        # (consideramos possível por padrão)
+        return True
