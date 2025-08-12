@@ -220,8 +220,8 @@ class ApostaManager(models.Manager):
         total_menino_calc = max(total_masculino, min_value_for_odds_calc)
         total_feminino_calc = max(total_feminino, min_value_for_odds_calc)
         
-        odd_menino = (total_geral_pote / total_menino_calc).quantize(Decimal('0.01'))
-        odd_feminino = (total_geral_pote / total_feminino_calc).quantize(Decimal('0.01'))
+        odd_menino = (total_feminino_calc / total_menino_calc).quantize(Decimal('0.01'))
+        odd_feminino = (total_menino_calc / total_feminino_calc).quantize(Decimal('0.01'))
         
         return {'M': odd_menino, 'F': odd_feminino}
     
@@ -262,7 +262,7 @@ class ApostaManager(models.Manager):
         return {
             'total_arrecadado_bruto': money(self.get_total_arrecadado_bruto()),
             'total_para_pais': money(self.get_total_para_pais()),
-
+            'total_potes_somados': money(self.get_total_pote_feminino()+ self.get_total_pote_masculino()),
             'total_pote_disponivel': money(self.get_total_pote()),
             'pote_masculino': money(self.get_total_pote_masculino()),
             'pote_feminino': money(self.get_total_pote_feminino()),
