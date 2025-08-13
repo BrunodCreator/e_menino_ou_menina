@@ -262,7 +262,6 @@ class ApostaManager(models.Manager):
         return {
             'total_arrecadado_bruto': money(self.get_total_arrecadado_bruto()),
             'total_para_pais': money(self.get_total_para_pais()),
-            'total_potes_somados': money(self.get_total_pote_feminino()+ self.get_total_pote_masculino()),
             'total_pote_disponivel': money(self.get_total_pote()),
             'pote_masculino': money(self.get_total_pote_masculino()),
             'pote_feminino': money(self.get_total_pote_feminino()),

@@ -11,6 +11,12 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
+    {% if aposta.encerrada %}
+    <div id="resultado-encerrado" class="celebration">
+        <h1> E {{ aposta.resultado|display_sexo}}!</h1>
+        <p>Você vai receber: R$ {{ aposta.valor_pago }}</p>
+    </div>
+    {% else %}
     <button class="menu-toggle" id="menuToggle">
         <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
     </button>
@@ -135,6 +141,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     
 	<script src="{% static 'js/apostas.js' %}"></script>
