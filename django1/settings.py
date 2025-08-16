@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -143,4 +144,36 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  # mantém os logs padrão do Django
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',  # envia logs para o terminal
+        },
+        'file': {
+            'class': 'logging.FileHandler',  # envia logs para um arquivo
+            'filename':BASE_DIR / 'debug_apostas.log', # caminho do arquivo
+            'mode': 'w',  # sobrescreve a cada execução, use 'a' para acrescentar
+            'formatter': 'verbose',  # vamos definir o formato abaixo
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'core': {  # substitua 'core' pelo nome da sua app
+            'handlers': ['console', 'file'],  # envia logs para console e arquivo
+            'level': 'DEBUG',  # mostra todos os logs, inclusive DEBUG
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

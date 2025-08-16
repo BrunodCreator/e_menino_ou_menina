@@ -13,7 +13,7 @@
 <body>
     {% if aposta.encerrada %}
     <div id="resultado-encerrado" class="celebration">
-        <h1> E {{ aposta.resultado|display_sexo}}!</h1>
+        <h1> E {{ aposta.resultado}}!</h1>
         <p>Você vai receber: R$ {{ aposta.valor_pago }}</p>
     </div>
     {% else %}

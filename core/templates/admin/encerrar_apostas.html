@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+  <h1>Encerrar Apostas Selecionadas</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="default">Encerrar apostas</button>
+  </form>
+
+  <h2>Apostas selecionadas</h2>
+  <ul>
+    {% for aposta in apostas %}
+      <li>{{ aposta.usuario }} - {{ aposta.sexo_escolha }} - R$ {{ aposta.valor_para_pote }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
