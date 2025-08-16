@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm, AuthenticationForm as DjangoAuthenticationForm
 from django import forms # Importa o módulo forms para ValidationError
 from .models import Usuario
+import logging
+logger = logging.getLogger(__name__)
 
 # 1. Crie um formulário personalizado para ALTERAR um usuário no admin
 class CustomUserChangeForm(UserChangeForm):
@@ -94,33 +96,49 @@ class UsuarioAdmin(UserAdmin):
 admin.site.login_form = CustomAdminAuthenticationForm
 
 
-from django.contrib import admin
 from .models import Aposta
+from django.urls import path
+from django.shortcuts import render, redirect, reverse
+from django import forms
+from django.contrib import messages
+from .views import encerrar_apostas_view
+
 
 def validar_aposta(modeladmin, request, queryset):
     queryset.update(status='valida')
 
 
-def rejeitar_aposta(modeladmin, request, queyset):
-    queyset.update(status='rejeitada')
-
+def rejeitar_aposta(modeladmin, request, queryset):
+    queryset.update(status='rejeitada')
 
 
 @admin.register(Aposta)
 class ApostaAdmin(admin.ModelAdmin):
     
-    list_display = ('usuario', 'data_aposta','sexo_escolha', 'valor_aposta', 'status')
-
+    list_display = ('usuario', 'data_aposta','sexo_escolha', 'valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
+    
     list_filter = ('status', 'sexo_escolha')
 
     search_fields = ('usuario__nome', 'status')
 
     ordering = ('-data_aposta',)
 
+    actions = [validar_aposta, rejeitar_aposta, 'encerrar_apostas']
+
     fieldsets = (
     (None, {'fields': ('usuario', 'sexo_escolha', 'valor_aposta', 'valor_para_pote', 'status')}),
     ('Opções de Status', {'fields': ('ativo', 'is_active', 'is_staff', 'is_superuser')}),
     )
+
+
+    def encerrar_apostas(self, request, queryset):
+        if not queryset.exists():
+            messages.error(request, "Nenhuma aposta selecionada!")
+            return
+        ids = ','.join(str(a.id)for a in queryset)
+        url = reverse('admin:encerrar_apostas')
+        return redirect(f"{url}?ids={ids}")
+    encerrar_apostas.short_description =  "🚨 ENCERRAR TODAS AS APOSTAS E CALCULAR PAGAMENTOS"
 
       # Exemplo de como você pode adicionar o relatório em uma página customizada
     def changelist_view(self, request, extra_context=None):
@@ -132,7 +150,7 @@ class ApostaAdmin(admin.ModelAdmin):
 
         return super().changelist_view(request, extra_context=extra_context)
     
-    actions = [validar_aposta, rejeitar_aposta]
+    
 
     def save_model(self, request, obj, form, change):
         """
@@ -150,5 +168,21 @@ class ApostaAdmin(admin.ModelAdmin):
         if not request.user.is_staff:
             queryset = queryset.filter(usuario=request.user)
         return queryset
+     
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('encerrar_apostas/', self.admin_site.admin_view(encerrar_apostas_view), name='encerrar_apostas'),
+        ]
+        return custom_urls + urls
+
+    
+
+
+    
+    
+
+    
     
 
