@@ -159,7 +159,7 @@ class ApostaManager(models.Manager):
     
     def get_total_pote_masculino(self):
         """
-        Retorna o total do pote masculino (75% dos valores apostados validados).
+        Retorna o total do pote masculino (70% dos valores apostados validados).
         """
         return self.filter(
             sexo_escolha='M',
@@ -170,7 +170,7 @@ class ApostaManager(models.Manager):
     
     def get_total_pote_feminino(self):
         """
-        Retorna o total do pote feminino (75% dos valores apostados validados).
+        Retorna o total do pote feminino (70% dos valores apostados validados).
         """
         return self.filter(
             sexo_escolha='F',
@@ -197,9 +197,9 @@ class ApostaManager(models.Manager):
     
     def get_total_para_pais(self):
         """
-        Retorna o total destinado aos pais (25% do total bruto arrecadado).
+        Retorna o total destinado aos pais (30% do total bruto arrecadado).
         """
-        return money(self.get_total_arrecadado_bruto() * Decimal('0.25'))
+        return money(self.get_total_arrecadado_bruto() * Decimal('0.30'))
     
     def calcular_odds(self):
         """
@@ -220,8 +220,8 @@ class ApostaManager(models.Manager):
         total_menino_calc = max(total_masculino, min_value_for_odds_calc)
         total_feminino_calc = max(total_feminino, min_value_for_odds_calc)
         
-        odd_menino = (total_feminino_calc / total_menino_calc).quantize(Decimal('0.01'))
-        odd_feminino = (total_menino_calc / total_feminino_calc).quantize(Decimal('0.01'))
+        odd_menino = (total_geral_pote / total_menino_calc).quantize(Decimal('0.01'))
+        odd_feminino = (total_geral_pote / total_feminino_calc).quantize(Decimal('0.01'))
         
         return {'M': odd_menino, 'F': odd_feminino}
     
@@ -319,6 +319,23 @@ class Aposta(models.Model):
         verbose_name="Data da Aposta"
     )
 
+    valor_para_pagar = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        blank=True,
+        null=True,
+        help_text="Valor preenchido no momento em que as apostas encerrarem.",
+        verbose_name="Valor do pagamento dos ganhadores"    
+    )
+
+    encerrado = models.BooleanField(
+        default=False,
+        verbose_name="Aposta encerrada",
+        help_text="Indica se a aposta foi encerrada e não aceita mais novos palpites"
+    )
+
+
     STATUS_PAYMENT = [
         ('pendente', 'Pendente de Pagamento'),
         ('aguardando_validacao', 'Aguardando Validação'),
@@ -333,6 +350,7 @@ class Aposta(models.Model):
         help_text="Status atual da aposta (ex: pendente, aguardando validação, válida).",
         verbose_name="Status da Aposta"
     )
+
 
     # Atribui o manager personalizado à classe Aposta
     objects = ApostaManager()
@@ -356,9 +374,9 @@ class Aposta(models.Model):
         """
         Sobrescreve o método save para calcular 'valor_para_pote' antes de salvar.
         """
-        # Calcula 75% do valor_aposta antes de salvar
+        # Calcula 70% do valor_aposta antes de salvar
         if self.valor_aposta is not None:
-            self.valor_para_pote = money(self.valor_aposta * Decimal('0.75'))
+            self.valor_para_pote = money(self.valor_aposta * Decimal('0.70'))
         else:
             self.valor_para_pote = Decimal('0.00')
 
