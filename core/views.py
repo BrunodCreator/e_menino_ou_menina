@@ -392,3 +392,107 @@ def confirmar_pagamento_aposta(request):
         print(f"Erro ao confirmar pagamento: {e}")
         return JsonResponse({'error': f'Erro ao confirmar pagamento: {str(e)}'}, status=500)
 
+
+import logging
+from django.contrib import admin, messages
+from django.shortcuts import render, redirect, get_list_or_404
+from django import forms
+from .models import Aposta
+
+class EncerramentoForm(forms.Form):
+    OPCOES = (
+        ('M', 'Menino'),
+        ('F', 'Menina'),
+    )
+    opcao_correta = forms.ChoiceField(choices=OPCOES, label='Qual foi a opção correta?')
+    aposta_ids = forms.CharField(widget=forms.HiddenInput) #IDs das apostas selecionadas
+
+# Configura logger
+logger = logging.getLogger(__name__)
+
+def encerrar_apostas_view(request):
+    """
+    View avançada para encerrar apostas no admin.
+    Protegida via admin_site.admin_view.
+    """
+    try:
+        # Recupera IDs via GET ou POST
+        if request.method == 'POST':
+            form = EncerramentoForm(request.POST)
+            if form.is_valid():
+                opcao_correta = form.cleaned_data['opcao_correta']
+                aposta_ids = [id_ for id_ in form.cleaned_data['aposta_ids'].split(',') if id_.isdigit()]
+
+                # Filtra apenas apostas válidas e ainda não encerradas
+                apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+                if not apostas.exists():
+                    messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
+                    return redirect('admin:core_aposta_changelist')
+
+                # Calcula odds, com fallback seguro
+                try:
+                    odds = Aposta.objects.calcular_odds()
+                    odd_pagamento = odds.get(opcao_correta, Decimal('1.00'))
+                except Exception as e:
+                    logger.error(f"Erro ao calcular odds: {e}")
+                    odds = {}
+                    odd_pagamento = Decimal('1.00')
+
+                total_encerradas = 0
+                total_vencedoras = 0
+                valor_total_pago = Decimal('0.00')
+
+                for aposta in apostas:
+                    try:
+                        aposta.encerrado = True
+                        valor_liquido = aposta.valor_para_pote or Decimal('0.00')
+
+                        if aposta.sexo_escolha == opcao_correta:
+                            aposta.valor_para_pagar = valor_liquido * Decimal(odd_pagamento)
+                            valor_total_pago += aposta.valor_para_pagar
+                            total_vencedoras += 1
+                        else:
+                            aposta.valor_para_pagar = Decimal('0.00')
+
+                        aposta.save()
+                        total_encerradas += 1
+                    except Exception as e:
+                        logger.error(f"Erro ao processar aposta {aposta.id}: {e}")
+
+                resultado_nome = "👶 Menino" if opcao_correta == 'M' else "👧 Menina"
+                msg = f"""
+                    🎉 RESULTADO: {resultado_nome}
+                    📊 ESTATÍSTICAS:
+                    • Total processadas: {total_encerradas}
+                    • Apostas vencedoras: {total_vencedoras}
+                    • Apostas perdedoras: {total_encerradas - total_vencedoras}
+                    • Valor total pago: R$ {valor_total_pago:.2f}
+                    ✅ TODAS AS APOSTAS FORAM ENCERRADAS!
+                                    """.strip()
+                messages.success(request, msg)
+                return redirect('admin:core_aposta_changelist')
+
+        else:
+            # GET: mostra o formulário do admin
+            aposta_ids = request.GET.get('ids', '')
+            aposta_ids = [id_ for id_ in aposta_ids.split(',') if id_.isdigit()]
+            apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+            form = EncerramentoForm(initial={'aposta_ids': ','.join(aposta_ids)})
+
+            if not apostas.exists():
+                messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
+                return redirect('admin:core_aposta_changelist')
+
+        context = {
+            'form': form,
+            'apostas': apostas,
+            'total_apostas': apostas.count(),
+            'apostas_menino': apostas.filter(sexo_escolha='M').count(),
+            'apostas_menina': apostas.filter(sexo_escolha='F').count(),
+        }
+        return render(request, 'admin/encerrar_apostas.html', context)
+
+    except Exception as e:
+        logger.exception(f"Erro inesperado na view de encerramento de apostas: {e}")
+        messages.error(request, "Ocorreu um erro inesperado. Veja os logs para mais detalhes.")
+        return redirect('admin:core_aposta_changelist')
