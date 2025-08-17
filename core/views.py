@@ -438,9 +438,8 @@ def encerrar_apostas_view(request):
                 aposta_ids = [id_ for id_ in form.cleaned_data['aposta_ids'].split(',') if id_.isdigit()]
 
                 # Filtra apenas apostas válidas e ainda não encerradas
-                apostas_encerradas = Aposta.objects.filter(id__in=aposta_ids, encerrado=True)
-                if apostas_encerradas:
-                    aposta_do_usuario = Aposta.objects.filter(id__in=aposta_ids, encerrado=True )
+                apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+                
                 if not apostas.exists():
                     messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
                     return redirect('admin:core_aposta_changelist')
