@@ -233,23 +233,29 @@ def apostas_view(request):
     """
     Renderiza a página de apostas com os dados iniciais do usuário
     """
-    # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
-    # quando o usuário está logado.
-    usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
-    total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-    quantidade_apostas = usuario_apostas.count()
-    ultima_aposta = usuario_apostas.first()
-    
-    # Cria um dicionário 'context' para passar dados para o template HTML.
-    context = {
-        'usuario': request.user, # Acessa o nome do usuário logado
-        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
-        'quantidade_apostas': quantidade_apostas,
-        'ultima_aposta': ultima_aposta,
-    }
-    # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
-    return render(request, 'apostas.html', context)
+    usuario = request.user
 
+    aposta_encerrada = Aposta.objects.filter(usuario=usuario, encerrado=True).last()
+
+    if aposta_encerrada:
+        context = {
+            'usuario': usuario,
+            'aposta': aposta_encerrada,
+        }
+    else:
+        usuario_apostas = Aposta.objects.filter(usuario=usuario, status='valida')
+        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+        quantidade_apostas = usuario_apostas.count()
+        ultima_aposta = usuario_apostas.first()
+
+        context = {
+            'usuario': usuario,
+            'total_apostado': total_apostado,
+            'quantidade_apostas': quantidade_apostas,
+            'ultima_aposta': ultima_aposta,
+        }
+    return render(request, 'apostas.html', context)
+   
 
 
 # View para obter os potes e odds (para o frontend buscar as informações)

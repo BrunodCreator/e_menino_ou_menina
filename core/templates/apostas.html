@@ -11,10 +11,10 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
-    {% if aposta.encerrada %}
+    {% if aposta.encerrado %}
     <div id="resultado-encerrado" class="celebration">
         <h1> E {{ aposta.resultado}}!</h1>
-        <p>Você vai receber: R$ {{ aposta.valor_pago }}</p>
+        <p>Você vai receber: R$ {{ aposta.valor_para_pagar }}</p>
     </div>
     {% else %}
     <button class="menu-toggle" id="menuToggle">

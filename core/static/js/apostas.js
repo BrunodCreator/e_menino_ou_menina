@@ -242,7 +242,7 @@ if (confirmButton && selectedOptionDisplay && modalOverlay && betAmountInput && 
 if (betAmountInput && expectedReturnElement) {
     betAmountInput.addEventListener('input', function() {
         const betAmount = parseFloat(this.value) || 0;
-        const valueForPot = betAmount * 0.75;
+        const valueForPot = betAmount * 0.70;
         const expectedReturn = valueForPot * currentOdds;
         expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
     });
