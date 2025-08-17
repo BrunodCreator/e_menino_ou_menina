@@ -17,7 +17,10 @@ const mainContent = document.getElementById('mainContent');
 const userNameElement = document.getElementById('userName'); 
 const oddMeninoElement = document.getElementById('oddMenino');
 const oddMeninaElement = document.getElementById('oddMenina');
-
+const content1 = document.querySelector('.container'); 
+const content2 = document.querySelector('.container2'); 
+const confirmButton1 = document.querySelector('#confirmButton1');
+const confirmButton2 = document.querySelector('#confirmButton2');
 // Seletores para o novo modal de mensagem
 const messageModalOverlay = document.getElementById('messageModalOverlay');
 const messageModalContent = document.getElementById('messageModalContent');
@@ -197,6 +200,39 @@ if (menuToggle && sidebar && mainContent) {
         }
     });
 }
+
+//Ação bebes
+console.log(confirmButton1,confirmButton2)
+
+function selectBoy (){
+    content1.style.filter = 'brightness(100%)';
+    confirmButton1.style.fontSize = '2em';
+    confirmButton1.style.padding = "10px";
+
+    content2.style.filter = 'brightness(50%)';
+    confirmButton2.style.fontSize = '1em';
+    confirmButton2.style.padding = "1px";
+    content2.style.width = "100vw";
+    content1.style.width = "200%";
+}
+
+function selectGirl (){
+    content2.style.filter = 'brightness(100%)';
+    confirmButton2.style.fontSize = '2em';
+    confirmButton2.style.padding = "10px";
+    
+    content1.style.filter = 'brightness(50%)';
+    confirmButton1.style.fontSize = '1em';
+    confirmButton1.style.padding = "1px";
+    content1.style.width = "100vw";
+    content2.style.width = "200%";
+}
+
+content1.addEventListener('mouseenter',(selectBoy))
+content1.addEventListener('click',(selectBoy))
+
+content2.addEventListener('mouseleave',(selectGirl))
+content2.addEventListener('click',(selectGirl))
 
 
 // Seleção das opções

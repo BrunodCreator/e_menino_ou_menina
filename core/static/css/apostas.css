@@ -261,11 +261,8 @@ html, body {
 .main-content {
     transition: margin-left 0.3s ease;
     margin-left: 0;
-    padding-top: 80px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    min-height: 100vh;
     box-sizing: border-box;
 }
 
@@ -273,14 +270,67 @@ html, body {
     margin-left: 250px;
 }
 
+/* Contêiner principal 1 */
 .container {
+    width: 100vw;               /* largura total da tela */
+    height: 100vh;               /* metade da altura da tela */
+    background-image: url("midias/Image/Gemini_Generated_Image_rld6kgrld6kgrld6.png");
+    background-size: cover;     /* cobre toda a área */
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: end;    /* centraliza horizontalmente o conteúdo */
+    align-items: center;  
+    gap: 30px;  
+    cursor: pointer;  
+    filter: brightness(50%);           /* centraliza verticalmente o conteúdo */
+    flex-direction: column;   
+    padding-bottom: 60px;     /* espaçamento entre elementos internos */
+}
+
+/* Contêiner 2 */
+.container2 {
+    width: 100vw;
+    height: 100vh;               /* metade da altura da tela */
+    background-image: url("midias/Image/Gemini_Generated_Image_shyh9xshyh9xshyh.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-top: 50px;
-    padding: 0 20px;
-    width: 100%;
+    align-items: center;
+    gap: 30px;  
+    cursor: pointer;  
+    filter: brightness(50%);      
+    flex-direction: column;        /* espaçamento entre elementos internos */
+    justify-content: end;    /* centraliza horizontalmente o conteúdo */
+    padding-bottom: 60px;     /* espaçamento entre elementos internos */
+}
+
+#confirmButton1{
+    border:2px solid ;
+    border-radius: 20px;
+    background-color: transparent; 
+    border-color: #94c1f8;
+    color: white;
+    font-size: 2em;
+    padding: 10px;
+}
+#confirmButton2{
+    border:2px solid e186b5;
+    border-radius: 20px;
+    background-color: transparent; 
+    border-color: #e186b5;
+    color: white;
+    font-size: 2em;
+    padding: 10px;
+}
+
+
+
+
+.odds-text{
+    color: #fff ;
 }
 
 .option-block {
@@ -340,9 +390,10 @@ html, body {
 }
 
 .odds-text {
-    font-size: 24px;
+    
+    font-size: 4em;
     font-weight: 600;
-    color: #666;
+    color: #ffffff;
 }
 
 .confirm-button {
@@ -386,17 +437,11 @@ html, body {
   .sidebar {
     width: 200px;
     left: -230px;
+    padding-bottom: 65px;  
   }
 
   .main-content.shifted {
     margin-left: 200px;
-  }
-
-  .container {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 0 10px;
   }
 
   .option-block {

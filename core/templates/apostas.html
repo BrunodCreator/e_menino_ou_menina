@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aposta - Menino ou Menina</title>
     <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <link rel="stylesheet" href="{% static 'css/apostas.css' %}">
+    <link rel="stylesheet" href="{% static 'css/apostas.css' %}" defer>
     <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
     {% if aposta.encerrada %}
@@ -57,22 +60,19 @@
     </div>
 
     <div class="main-content" id="mainContent">
-        <div class="container">
-            <div class="option-block menino" data-option="menino" data-odds="2.5">
-                <div class="option-text">MENINO</div>
-                <!-- Adicionado ID para a odd do menino -->
-                <div class="odds-text" id="oddMenino">odd: 1.0x</div>
-            </div>
-            <div class="option-block menina" data-option="menina" data-odds="1.8">
-                <div class="option-text">MENINA</div>
-                <!-- Adicionado ID para a odd da menina -->
-                <div class="odds-text" id="oddMenina">odd: 1.0x</div>
-            </div>
+        <div class="container" id="container">
+            <div class="odds-text" id="oddMenino">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton1">
+                    CONFIRMAR
+                </button>
+        </div>
+        <div class="container2" id="container2">   
+            <div class="odds-text" id="oddMenina">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton2">
+                    CONFIRMAR
+                </button>
         </div>
 
-        <button class="confirm-button" id="confirmButton">
-            CONFIRMAR
-        </button>
     </div>
 
     <!-- Modal do formulário de aposta -->
