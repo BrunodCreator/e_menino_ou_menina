@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    {% load static %}
+	{% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aposta - Menino ou Menina</title>
@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    
     <!-- Botão para abrir/fechar sidebar -->
     <button class="menu-toggle" id="menuToggle">
         <span>&#8285;</span>
@@ -63,86 +62,131 @@
                 {% endif %}
             </div>
 
-        {% else %}
-            <!-- Tela normal de apostas -->
-            <div class="container">
-                <div class="option-block menino" data-option="menino" data-odds="2.5">
-                    <div class="option-text">MENINO</div>
-                    <div class="odds-text" id="oddMenino">odd: 1.0x</div>
-                </div>
-                <div class="option-block menina" data-option="menina" data-odds="1.8">
-                    <div class="option-text">MENINA</div>
-                    <div class="odds-text" id="oddMenina">odd: 1.0x</div>
-                </div>
-            </div>
+    {% else %}
+    <button class="menu-toggle" id="menuToggle">
+        <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
+    </button>
 
-            <button class="confirm-button" id="confirmButton">CONFIRMAR</button>
-
-            <!-- Modal do formulário de aposta -->
-            <div class="modal-overlay" id="modalOverlay">
-                <div class="bet-form">
-                    <h2 class="form-title">Fazer Aposta</h2>
-                    <div class="form-group">
-                        <label class="form-label">Opção Selecionada:</label>
-                        <div style="font-weight: 600; color: #333; font-size: 16px;" id="selectedOptionDisplay"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="betAmount">Valor da Aposta (R$):</label>
-                        <input type="number" id="betAmount" class="form-input" placeholder="0,00" min="1" step="0.01">
-                    </div>
-                    <div class="return-info">
-                        <div class="return-label">Retorno Esperado:</div>
-                        <div class="return-value" id="expectedReturn">R$ 0,00</div>
-                    </div>
-                    <div class="form-buttons">
-                        <button class="form-button btn-secondary" id="cancelBet">Cancelar</button>
-                        <button class="form-button btn-primary" id="placeBet">Fazer Aposta</button>
-                    </div>
-                </div>
+    <div class="sidebar" id="sidebar">
+        <div class="user-info">
+            <div class="user-title">Dados do Usuário</div>
+            
+            <div class="info-item">
+                <div class="info-label">Nome</div>
+                <!-- O nome do usuário será populado via JS na função carregarDados -->
+                <!--div class="info-value" id="userName">{{ usuario.get_full_name|default:usuario.nome}}</div-->
+                <div class="info-value" id="userName">Carregando...</div>
             </div>
-
-            <!-- Modal de Mensagem -->
-            <div class="modal-overlay" id="messageModalOverlay">
-                <div class="bet-form" id="messageModalContent">
-                    <h2 class="form-title">Mensagem</h2>
-                    <p id="messageModalText" style="text-align: center; margin-bottom: 20px;"></p>
-                    <div class="form-buttons">
-                        <button class="form-button btn-secondary" id="messageModalCancelButton" style="display: none;">Cancelar</button>
-                        <button class="form-button btn-primary" id="messageModalConfirmButton">OK</button>
-                    </div>
-                </div>
+            
+            <div class="info-item">
+                <div class="info-label">Total Apostado</div>
+                <div class="info-value money" id="totalBet">R$ 0,00</div>
             </div>
-
-            <!-- Modal PIX -->
-            <div class="modal-overlay" id="pixModalOverlay">
-                <div class="bet-form">
-                    <h2 class="form-title">Pagar Aposta via PIX</h2>
-                    <div class="form-group">
-                        <label class="form-label">QR Code:</label>
-                        <div id="pixQrCodeContainer"></div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Código PIX:</label>
-                        <p id="pixPayload" style="font-family: monospace; word-wrap: break-word; background-color: #f5f5f5; padding: 10px; border-radius: 5px;"></p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Chave PIX:</label>
-                        <p id="pixKey"></p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Valor:</label>
-                        <p id="pixValue"></p>
-                    </div>
-                    <div class="form-buttons">
-                        <button class="form-button btn-primary" id="copyPixButton">Copiar Código PIX</button>
-                        <button class="form-button btn-primary" id="confirmPixPayment">Confirmar Pagamento</button>
-                        <button class="form-button btn-secondary" id="closePixModal">Fechar</button>
-                    </div>
-                </div>
+            
+            <div class="info-item">
+                <div class="info-label">Apostas Realizadas</div>
+                <div class="info-value" id="betCount">0</div>
             </div>
-        {% endif %}
+            
+            <div class="info-item">
+                <div class="info-label">Última Aposta</div>
+                <div class="info-value" id="lastBet">-</div>
+            </div>
+        </div>
+        
+        <button class="logout-button" id="logoutButton">
+            Sair da Conta
+        </button>
+        <form id="logoutForm" method="POST" action="/logout/" style="display: none;">
+            {% csrf_token %}
+        </form>
     </div>
 
-    <script src="{% static 'js/apostas.js' %}"></script>
+    <div class="main-content" id="mainContent">
+        <div class="container" id="container">
+            <div class="odds-text" id="oddMenino">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton1">
+                    CONFIRMAR
+                </button>
+        </div>
+        <div class="container2" id="container2">   
+            <div class="odds-text" id="oddMenina">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton2">
+                    CONFIRMAR
+                </button>
+        </div>
+
+    </div>
+
+    <!-- Modal do formulário de aposta -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="bet-form">
+            <h2 class="form-title">Fazer Aposta</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Opção Selecionada:</label>
+                <div style="font-weight: 600; color: #333; font-size: 16px;" id="selectedOptionDisplay"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="betAmount">Valor da Aposta (R$):</label>
+                <input type="number" id="betAmount" class="form-input" placeholder="0,00" min="1" step="0.01">
+            </div>
+            
+            <div class="return-info">
+                <div class="return-label">Retorno Esperado:</div>
+                <div class="return-value" id="expectedReturn">R$ 0,00</div>
+            </div>
+            
+            <div class="form-buttons">
+                <button class="form-button btn-secondary" id="cancelBet">Cancelar</button>
+                <button class="form-button btn-primary" id="placeBet">Fazer Aposta</button>
+            </div>
+        </div>
+    </div>
+
+     <!-- Novo Modal de Mensagem/Confirmação (Substitui alert/confirm) -->
+    <div class="modal-overlay" id="messageModalOverlay">
+        <div class="bet-form" id="messageModalContent">
+            <h2 class="form-title">Mensagem</h2>
+            <p id="messageModalText" style="text-align: center; margin-bottom: 20px;"></p>
+            <div class="form-buttons">
+                <button class="form-button btn-secondary" id="messageModalCancelButton" style="display: none;">Cancelar</button>
+                <button class="form-button btn-primary" id="messageModalConfirmButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Novo Modal para Detalhes do PIX -->
+    <div class="modal-overlay" id="pixModalOverlay">
+        <div class="bet-form">
+            <h2 class="form-title">Pagar Aposta via PIX</h2>
+            <div class="form-group">
+                <label class="form-label">QR Code:</label>
+                <div id="pixQrCodeContainer"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Código PIX:</label>
+                <p id="pixPayload" style="font-family: monospace; word-wrap: break-word; background-color: #f5f5f5; padding: 10px; border-radius: 5px;"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chave PIX:</label>
+                <p id="pixKey"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Valor:</label>
+                <p id="pixValue"></p>
+            </div>
+            <div class="form-buttons">
+                <button class="form-button btn-primary" id="copyPixButton">Copiar Código PIX</button>
+                <button class="form-button btn-primary" id="confirmPixPayment">Confirmar Pagamento</button>
+                <button class="form-button btn-secondary" id="closePixModal">Fechar</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
+	<script src="{% static 'js/apostas.js' %}"></script>
 </body>
 </html>
