@@ -1,6 +1,3 @@
-// Seletores de elementos DOM
-
-// const blocks = document.querySelectorAll('.option-block');
 const modalOverlay = document.getElementById('modalOverlay');
 const selectedOptionDisplay = document.getElementById('selectedOptionDisplay');
 const betAmountInput = document.getElementById('betAmount');
