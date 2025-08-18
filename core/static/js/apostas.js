@@ -1,6 +1,6 @@
 // Seletores de elementos DOM
-const blocks = document.querySelectorAll('.option-block');
-const confirmButton = document.getElementById('confirmButton');
+
+// const blocks = document.querySelectorAll('.option-block');
 const modalOverlay = document.getElementById('modalOverlay');
 const selectedOptionDisplay = document.getElementById('selectedOptionDisplay');
 const betAmountInput = document.getElementById('betAmount');
@@ -21,6 +21,7 @@ const content1 = document.querySelector('.container');
 const content2 = document.querySelector('.container2'); 
 const confirmButton1 = document.querySelector('#confirmButton1');
 const confirmButton2 = document.querySelector('#confirmButton2');
+const blocks = [content1, content2];
 // Seletores para o novo modal de mensagem
 const messageModalOverlay = document.getElementById('messageModalOverlay');
 const messageModalContent = document.getElementById('messageModalContent');
@@ -205,84 +206,95 @@ if (menuToggle && sidebar && mainContent) {
 console.log(confirmButton1,confirmButton2)
 
 function selectBoy (){
+    currentSelection = 'menino';
+    currentOdds = parseFloat(content1.dataset.odds);
     content1.style.filter = 'brightness(100%)';
+    content2.style.filter = 'brightness(50%)';
+
     confirmButton1.style.fontSize = '2em';
     confirmButton1.style.padding = "10px";
-
-    content2.style.filter = 'brightness(50%)';
     confirmButton2.style.fontSize = '1em';
     confirmButton2.style.padding = "1px";
+    
     content2.style.width = "100vw";
     content1.style.width = "200%";
 }
 
 function selectGirl (){
+    currentSelection = 'menina';
+    currentOdds = parseFloat(content2.dataset.odds);
     content2.style.filter = 'brightness(100%)';
+    content2.style.width = "200%";
+    content1.style.filter = 'brightness(50%)';
+
     confirmButton2.style.fontSize = '2em';
     confirmButton2.style.padding = "10px";
     
-    content1.style.filter = 'brightness(50%)';
     confirmButton1.style.fontSize = '1em';
     confirmButton1.style.padding = "1px";
     content1.style.width = "100vw";
-    content2.style.width = "200%";
+    
 }
 
-content1.addEventListener('mouseenter',(selectBoy))
 content1.addEventListener('click',(selectBoy))
-
-content2.addEventListener('mouseleave',(selectGirl))
 content2.addEventListener('click',(selectGirl))
 
+// =======================
+// Abrir modal de aposta
+// =======================
+function openBetModal() {
+    if (!currentSelection) return; // Evita abrir sem seleção
+    if (!currentOdds || currentOdds === 0) {
+        console.warn('openBetModal: currentOdds inválido', currentOdds);
+        return;
+    }
 
-// Seleção das opções
-if (blocks && confirmButton) { // Adicionado confirmButton para garantir que ele exista
-    blocks.forEach(block => {
-        block.addEventListener('click', function() {
-            blocks.forEach(b => b.classList.remove('selected'));
-            
-            this.classList.add('selected');
-            
-            currentSelection = this.dataset.option;
-            currentOdds = parseFloat(this.dataset.odds);
+    selectedOptionDisplay.textContent = currentSelection === 'menino' ? 'MENINO' : 'MENINA';
+    modalOverlay.classList.add('show');
 
-            confirmButton.classList.remove('menino', 'menina');
-            if (currentSelection === 'menino') { 
-                confirmButton.classList.add('menino');
-            } else {
-                confirmButton.classList.add('menina');
-            }
-
-            confirmButton.classList.add('show');
-        });
-    });
+    // Reset do input e retorno
+    betAmountInput.value = '';
+    expectedReturnElement.textContent = 'R$ 0,00';
+    betAmountInput.focus();
 }
 
+// Botões de confirmação
+[confirmButton1, confirmButton2].forEach(btn => btn.addEventListener('click', openBetModal));
 
-// Confirmar seleção - abre modal
-if (confirmButton && selectedOptionDisplay && modalOverlay && betAmountInput && expectedReturnElement) { // Adicionado expectedReturnElement
-    confirmButton.addEventListener('click', function() {
-        if (currentSelection) {
-            const displayText = currentSelection === 'menino' ? 'MENINO' : 'MENINA';
-            selectedOptionDisplay.textContent = displayText;
-            modalOverlay.classList.add('show');
-            betAmountInput.value = '';
-            expectedReturnElement.textContent = 'R$ 0,00';
-            betAmountInput.focus();
-        }
-    });
-}
+// =======================
+// Cancelar aposta / fechar modal
+// =======================
+cancelBetButton.addEventListener('click', () => {
+    modalOverlay.classList.remove('show');
+    currentSelection = null;
+    currentOdds = 0;
+});
 
+modalOverlay.addEventListener('click', e => {
+    if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('show');
+        currentSelection = null;
+        currentOdds = 0;
+    }
+});
 
+// =======================
 // Calcular retorno esperado
-if (betAmountInput && expectedReturnElement) {
-    betAmountInput.addEventListener('input', function() {
-        const betAmount = parseFloat(this.value) || 0;
-        const valueForPot = betAmount * 0.75;
-        const expectedReturn = valueForPot * currentOdds;
-        expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
-    });
-}
+// =======================
+betAmountInput.addEventListener('input', function() {
+    const value = this.value.replace(',', '.'); // Substitui vírgula por ponto
+    const betAmount = parseFloat(value) || 0;
+
+    if (!currentOdds || currentOdds === 0) {
+        expectedReturnElement.textContent = 'R$ 0,00';
+        return;
+    }
+
+    const valueForPot = betAmount * 0.70;
+    const expectedReturn = valueForPot * currentOdds;
+
+    expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
+});
 
 
 // Fazer aposta
