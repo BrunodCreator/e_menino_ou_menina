@@ -351,6 +351,7 @@ html, body {
 }
 
 .option-block.menino {
+    background-image: image();
     border-bottom: 5px solid #007bff;
 }
 
@@ -370,7 +371,7 @@ html, body {
 }
 
 .option-block.selected.menino {
-    border-color: #007bff;
+    border-color: #235e9e;
 }
 
 .option-block.selected.menina {

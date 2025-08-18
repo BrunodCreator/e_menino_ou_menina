@@ -230,26 +230,40 @@ def cadastro_usuario(request):
 @login_required
 @require_http_methods(["GET"])
 def apostas_view(request):
-    """
-    Renderiza a página de apostas com os dados iniciais do usuário
-    """
-    # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
-    # quando o usuário está logado.
-    usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
+    usuario = request.user
+
+    # Verifica se há apostas encerradas no sistema
+    aposta_encerrada_global = Aposta.objects.filter(encerrado=True).last()
+
+    # Verifica se o usuário atual tem alguma aposta vencedora
+    aposta_vencedora_usuario = (
+        Aposta.objects.filter(usuario=usuario, encerrado=True)
+        .exclude(valor_para_pagar__lte=0)
+        .last()
+    )
+
+    if aposta_encerrada_global:
+        # Tela de resultado global
+        context = {
+            'usuario': usuario,
+            'aposta_encerrada_global': aposta_encerrada_global,
+            'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
+        }
+        return render(request, 'apostas.html', context)
+
+    # Caso contrário, tela normal de apostas
+    usuario_apostas = Aposta.objects.filter(usuario=usuario, status='valida')
     total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
     quantidade_apostas = usuario_apostas.count()
     ultima_aposta = usuario_apostas.first()
-    
-    # Cria um dicionário 'context' para passar dados para o template HTML.
+
     context = {
-        'usuario': request.user, # Acessa o nome do usuário logado
-        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
+        'usuario': usuario,
+        'total_apostado': total_apostado,
         'quantidade_apostas': quantidade_apostas,
         'ultima_aposta': ultima_aposta,
     }
-    # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
     return render(request, 'apostas.html', context)
-
 
 
 # View para obter os potes e odds (para o frontend buscar as informações)
@@ -425,6 +439,7 @@ def encerrar_apostas_view(request):
 
                 # Filtra apenas apostas válidas e ainda não encerradas
                 apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+                
                 if not apostas.exists():
                     messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
                     return redirect('admin:core_aposta_changelist')
