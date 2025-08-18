@@ -286,6 +286,7 @@ html, body {
     filter: brightness(50%);           /* centraliza verticalmente o conteúdo */
     flex-direction: column;   
     padding-bottom: 60px;     /* espaçamento entre elementos internos */
+    transition: filter 0.3s ease, width 0.3s ease;
 }
 
 /* Contêiner 2 */
@@ -305,17 +306,23 @@ html, body {
     flex-direction: column;        /* espaçamento entre elementos internos */
     justify-content: end;    /* centraliza horizontalmente o conteúdo */
     padding-bottom: 60px;     /* espaçamento entre elementos internos */
+    transition: filter 0.3s ease, width 0.3s ease;
 }
 
+
+
 #confirmButton1{
-    border:2px solid ;
+    border:4px solid e186b5;
     border-radius: 20px;
     background-color: transparent; 
     border-color: #94c1f8;
     color: white;
     font-size: 2em;
     padding: 10px;
+    transition: all 0.3s ease;
+    font-weight: 550;
 }
+
 #confirmButton2{
     border:2px solid e186b5;
     border-radius: 20px;
@@ -324,13 +331,8 @@ html, body {
     color: white;
     font-size: 2em;
     padding: 10px;
-}
-
-
-
-
-.odds-text{
-    color: #fff ;
+    transition: all 0.3s ease;
+    font-weight: 550;
 }
 
 .option-block {
@@ -390,7 +392,6 @@ html, body {
 }
 
 .odds-text {
-    
     font-size: 4em;
     font-weight: 600;
     color: #ffffff;
@@ -455,7 +456,7 @@ html, body {
   }
 
   .odds-text {
-    font-size: 20px;
+    font-size: 30px;
   }
 
   .confirm-button {
@@ -496,7 +497,8 @@ html, body {
 @media (max-width: 480px) {
   .form-title     { font-size: 18px; }
   .option-text    { font-size: 26px; }
-  .odds-text      { font-size: 18px; }
+  .odds-text      { font-size: 30px;
+                    font-weight: 800; }
   .form-input,
   .form-button    { font-size: 14px; padding: 10px; }
   .bet-form       { padding: 15px; }

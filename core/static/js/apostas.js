@@ -137,12 +137,12 @@ async function carregarDados() {
             const oddMenina = parseFloat(data.odd_menina);
 
             if (oddMeninoElement) {
-                oddMeninoElement.textContent = `odd: ${oddMenino.toFixed(1)}x`;
+                oddMeninoElement.textContent = `Odd: ${oddMenino.toFixed(1)}x`;
             } else {
                 console.warn('carregarDados: Elemento oddMeninoElement não encontrado.');
             }
             if (oddMeninaElement) {
-                oddMeninaElement.textContent = `odd: ${oddMenina.toFixed(1)}x`;
+                oddMeninaElement.textContent = `Odd: ${oddMenina.toFixed(1)}x`;
             } else {
                 console.warn('carregarDados: Elemento oddMeninaElement não encontrado.');
             }
