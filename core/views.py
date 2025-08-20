@@ -234,22 +234,30 @@ def apostas_view(request):
 
     # Verifica se há apostas encerradas no sistema
     aposta_encerrada_global = Aposta.objects.filter(encerrado=True).last()
+    
 
     # Verifica se o usuário atual tem alguma aposta vencedora
     aposta_vencedora_usuario = (
-        Aposta.objects.filter(usuario=usuario, encerrado=True)
+        Aposta.objects.filter(usuario=usuario, encerrado=True, status='Válida')
         .exclude(valor_para_pagar__lte=0)
         .last()
     )
 
-    if aposta_encerrada_global and aposta_vencedora_usuario:
-        # Tela de resultado global
+    if aposta_encerrada_global:
+            
+        if aposta_vencedora_usuario and aposta_encerrada_global:
+            ganhos = Aposta.objects.filter(encerrado=True, status='Válida')
+            context = {
+                'usuario': usuario,
+                'ganhos': ganhos,
+            }
+            return render(request, 'aposta.html', context)
         context = {
             'usuario': usuario,
             'aposta_encerrada_global': aposta_encerrada_global,
             'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
         }
-        return render(request, 'apostas.html', context)
+        return render(request, 'apostas.html', context)       
 
     # Caso contrário, tela normal de apostas
     usuario_apostas = Aposta.objects.filter(usuario=usuario, status='valida')
