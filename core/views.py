@@ -230,25 +230,57 @@ def cadastro_usuario(request):
 @login_required
 @require_http_methods(["GET"])
 def apostas_view(request):
-    """
-    Renderiza a página de apostas com os dados iniciais do usuário
-    """
-    # request.user é uma instância do seu modelo de usuário customizado (core.Usuario)
-    # quando o usuário está logado.
-    usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
+    usuario = request.user
+
+    # Verifica se há apostas encerradas no sistema
+    aposta_encerrada_global = Aposta.objects.filter(encerrado=True).last()
+
+    # Verifica se o usuário atual tem alguma aposta vencedora
+    aposta_vencedora_usuario = (
+        Aposta.objects.filter(usuario=usuario, encerrado=True, status='Válida')
+        .exclude(valor_para_pagar__lte=0)
+        .last()
+    )
+
+    valor_aposta = aposta_vencedora_usuario.valor_aposta
+    valor_contribuicao = (valor_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
+    
+
+    if aposta_encerrada_global:
+            
+        if aposta_vencedora_usuario and aposta_encerrada_global:
+            valor_aposta = aposta_vencedora_usuario.valor_aposta
+            valor_contribuicao = (valor_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
+            context = {
+                'usuario': usuario,
+                'aposta_encerrada_global': aposta_encerrada_global,
+                'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
+                'valor_contribuicao': valor_contribuicao,
+                'palpite_correto': palpite_correto
+            }
+            return render(request, 'apostas.html', context)
+        context = {
+            'usuario': usuario,
+            'aposta_encerrada_global': aposta_encerrada_global,
+            'aposta_vencedora_usuario': aposta_vencedora_usuario, 
+            'palpite_correto': palpite_correto # pode ser None
+        }
+        return render(request, 'apostas.html', context)       
+
+    # Caso contrário, tela normal de apostas
+    usuario_apostas = Aposta.objects.filter(usuario=usuario, status='valida')
     total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
     quantidade_apostas = usuario_apostas.count()
     ultima_aposta = usuario_apostas.first()
-    
-    # Cria um dicionário 'context' para passar dados para o template HTML.
+
     context = {
-        'usuario': request.user, # Acessa o nome do usuário logado
-        'total_apostado': total_apostado, # Chama um método do seu modelo para formatar o telefone
+        'usuario': usuario,
+        'total_apostado': total_apostado,
         'quantidade_apostas': quantidade_apostas,
         'ultima_aposta': ultima_aposta,
     }
-    # Renderiza o template 'apostas.html', passando o contexto com os dados do usuário.
     return render(request, 'apostas.html', context)
+
 
 
 
