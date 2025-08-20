@@ -237,7 +237,7 @@ def apostas_view(request):
 
     # Verifica se o usuário atual tem alguma aposta vencedora
     aposta_vencedora_usuario = (
-        Aposta.objects.filter(usuario=usuario, encerrado=True, status='Válida')
+        Aposta.objects.filter(usuario=usuario, encerrado=True)
         .exclude(valor_para_pagar__lte=0)
         .last()
     )
@@ -247,7 +247,7 @@ def apostas_view(request):
         context = {
             'usuario': usuario,
             'aposta_encerrada_global': aposta_encerrada_global,
-            'aposta_vencedora_usuario': aposta_vencedora_usuario, 
+            'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
         }
         return render(request, 'apostas.html', context)
 
