@@ -194,6 +194,7 @@ if (menuToggle && sidebar && mainContent) {
             sidebar.classList.add('open');
             menuToggle.classList.add('open');
             mainContent.classList.add('shifted');
+            document.querySelector("#menuToggle").style.display = 'none'
         } else {
             sidebar.classList.remove('open');
             menuToggle.classList.remove('open');
@@ -218,6 +219,15 @@ function selectBoy (){
     
     content2.style.width = "100vw";
     content1.style.width = "200%";
+    document.querySelector("#menuToggle").style.display = 'flex'
+    document.querySelector("#sidebar").classList
+
+    const sidebar = document.getElementById("sidebar");
+
+    if (sidebar.classList.contains("open")) {
+        document.querySelector("#menuToggle").click()
+    } 
+
 }
 
 function selectGirl (){
@@ -233,6 +243,15 @@ function selectGirl (){
     confirmButton1.style.fontSize = '1em';
     confirmButton1.style.padding = "1px";
     content1.style.width = "100vw";
+
+        document.querySelector("#menuToggle").style.display = 'flex'
+    document.querySelector("#sidebar").classList
+
+    const sidebar = document.getElementById("sidebar");
+
+    if (sidebar.classList.contains("open")) {
+        document.querySelector("#menuToggle").click()
+    } 
     
 }
 
