@@ -251,7 +251,7 @@ def apostas_view(request):
                 'usuario': usuario,
                 'ganhos': ganhos,
             }
-            return render(request, 'aposta.html', context)
+            return render(request, 'apostas.html', context)
         context = {
             'usuario': usuario,
             'aposta_encerrada_global': aposta_encerrada_global,
