@@ -14,18 +14,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    {% if aposta_encerrada_global and aposta_vencedora_usuario %}
-    <div id="resultado-encerrado" class="celebration">
-        <!-- <h1> É {{ aposta.resultado}}!</h1> -->
-        <p>Você acertou, o bebê é {{aposta_vencedora_usuario.palpite}}</p>
-        <p>Você Enviou: R$ {{aposta_vencedora_usuario.valor_aposta}}</p>
-        <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
-        <p>Você vai receber: R$ {{aposta_vencedora_usuario.valor_para_pagar}}</p>
-    </div>
-    {% elif aposta_encerrada_global and not aposta_vencedora_usuario %}
-    <P>Você ERROOOU!, o bebê é {{aposta_encerrada_global.palpite}}</P>
-    <p>Você Enviou: R$ {{aposta_vencedora_usuario.valor_aposta}}</p>
-    <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+    {% if aposta_encerrada_global and not aposta_usuario %}
+        <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ aposta.resultado}}!</h1> -->
+                <p>Teste</p>
+            </div>
+    
+    {% elif aposta_encerrada_global and aposta_usuario %}
+        {% if valores_recebidos > 0 %}
+            <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ aposta.resultado}}!</h1> -->
+                <!-- <p>Você acertou, o bebê é {{aposta_usuario.palpite}}</p> -->
+                 <p>Quantidade de apostas: {{quantidade_apostas}}</p>
+                <p>Você Enviou: R$ {{valores_apostados}}</p>
+                <p>A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}</p>
+                <p>Você vai receber: R$ {{valores_recebidos}}</p>
+                 <h3>Suas apostas:</h3>
+            <ul>
+                {% for aposta in aposta_usuario %}
+                    <li>
+                        Palpite: {% if aposta.sexo_escolha == "M" %}
+                                    Menino
+                                {% else %}
+                                    Menina
+                                {% endif %} |
+                        Valor: R$ {{ aposta.valor_aposta }} |
+                        Receberá: R$ {{ aposta.valor_para_pagar }}
+                    </li>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div id="resultado-encerrado" class="error">
+                <!-- <p>Você errou! O bebê é {{aposta_encerrada_global.palpite}}</p> -->
+                <p>Você Enviou: R$ {{valores_apostados}}</p>
+                <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+            </div>
+        {% endif %}
    
     {% else %}
     <button class="menu-toggle" id="menuToggle">

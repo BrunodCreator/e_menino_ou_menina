@@ -236,34 +236,35 @@ def apostas_view(request):
     aposta_encerrada_global = Aposta.objects.filter(encerrado=True).last()
 
     # Verifica se o usuário atual tem alguma aposta vencedora
-    aposta_vencedora_usuario = (
+    aposta_usuario = (
         Aposta.objects.filter(usuario=usuario, encerrado=True, status='Válida')
-        .exclude(valor_para_pagar__lte=0)
-        .last()
     )
-
-    valor_aposta = aposta_vencedora_usuario.valor_aposta
-    valor_contribuicao = (valor_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
-    
 
     if aposta_encerrada_global:
             
-        if aposta_vencedora_usuario and aposta_encerrada_global:
-            valor_da_aposta = aposta_vencedora_usuario.valor_aposta
-            valor_contribuicao = (valor_da_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
+        if aposta_usuario:
+            valores_recebidos = aposta_usuario.aggregate(total=Sum('valor_para_pagar'))['total'] or Decimal('0.00')
+            valores_apostados = aposta_usuario.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
+            valor_contribuicao = (valores_apostados * Decimal("0.30")).quantize(Decimal('0.01'))
+            quantidade_apostas = aposta_usuario.count()
             
             context = {
                 'usuario': usuario,
                 'aposta_encerrada_global': aposta_encerrada_global,
-                'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
+                'aposta_usuario': aposta_usuario,
+                'quantidade_apostas': quantidade_apostas,
                 'valor_contribuicao': valor_contribuicao,
+                'valores_apostados': valores_apostados,
+                'valores_recebidos': valores_recebidos,
                  
             }
             return render(request, 'apostas.html', context)
+        
         context = {
             'usuario': usuario,
             'aposta_encerrada_global': aposta_encerrada_global,
-            'aposta_vencedora_usuario': aposta_vencedora_usuario, 
+            'aposta_vencedora_usuario': aposta_usuario, 
+            
         }
         return render(request, 'apostas.html', context)       
 
