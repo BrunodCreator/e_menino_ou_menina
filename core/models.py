@@ -199,7 +199,7 @@ class ApostaManager(models.Manager):
         """
         Retorna o total destinado aos pais (30% do total bruto arrecadado).
         """
-        return money(self.get_total_arrecadado_bruto() * Decimal('0.30'))
+        return money(self.get_total_arrecadado_bruto() * Decimal('0.30')) #TODO LEMBRAR DE MUDAR
     
     def calcular_odds(self):
         """
@@ -376,7 +376,7 @@ class Aposta(models.Model):
         """
         # Calcula 70% do valor_aposta antes de salvar
         if self.valor_aposta is not None:
-            self.valor_para_pote = money(self.valor_aposta * Decimal('0.70'))
+            self.valor_para_pote = money(self.valor_aposta * Decimal('0.70')) #TODO por favor lembrar de mudar para o valor correto
         else:
             self.valor_para_pote = Decimal('0.00')
 

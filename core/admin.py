@@ -115,7 +115,7 @@ def rejeitar_aposta(modeladmin, request, queryset):
 @admin.register(Aposta)
 class ApostaAdmin(admin.ModelAdmin):
     
-    list_display = ('usuario', 'data_aposta','sexo_escolha', 'valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
+    list_display = ('usuario', 'data_aposta','sexo_escolha','valor_aposta','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
     
     list_filter = ('status', 'sexo_escolha')
 
