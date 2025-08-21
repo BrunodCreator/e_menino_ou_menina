@@ -249,21 +249,21 @@ def apostas_view(request):
     if aposta_encerrada_global:
             
         if aposta_vencedora_usuario and aposta_encerrada_global:
-            valor_aposta = aposta_vencedora_usuario.valor_aposta
-            valor_contribuicao = (valor_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
+            valor_da_aposta = aposta_vencedora_usuario.valor_aposta
+            valor_contribuicao = (valor_da_aposta * Decimal("0.30")).quantize(Decimal('0.01'))
+            
             context = {
                 'usuario': usuario,
                 'aposta_encerrada_global': aposta_encerrada_global,
                 'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
                 'valor_contribuicao': valor_contribuicao,
-                'palpite_correto': palpite_correto
+                 
             }
             return render(request, 'apostas.html', context)
         context = {
             'usuario': usuario,
             'aposta_encerrada_global': aposta_encerrada_global,
             'aposta_vencedora_usuario': aposta_vencedora_usuario, 
-            'palpite_correto': palpite_correto # pode ser None
         }
         return render(request, 'apostas.html', context)       
 
