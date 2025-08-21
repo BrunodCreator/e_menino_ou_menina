@@ -14,11 +14,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    {% if aposta.encerrada %}
+    {% if aposta_encerrada_global and aposta_vencedora_usuario %}
     <div id="resultado-encerrado" class="celebration">
-        <h1> E {{ aposta.resultado}}!</h1>
-        <p>Você vai receber: R$ {{ aposta.valor_pago }}</p>
+        <!-- <h1> É {{ aposta.resultado}}!</h1> -->
+        <p>Você acertou, o bebê é {{aposta_vencedora_usuario.palpite}}</p>
+        <p>Você Enviou: R$ {{aposta_vencedora_usuario.valor_aposta}}</p>
+        <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+        <p>Você vai receber: R$ {{aposta_vencedora_usuario.valor_para_pagar}}</p>
     </div>
+    {% elif aposta_encerrada_global and not aposta_vencedora_usuario %}
+    <P>Você ERROOOU!, o bebê é {{aposta_encerrada_global.palpite}}</P>
+    <p>Você Enviou: R$ {{aposta_vencedora_usuario.valor_aposta}}</p>
+    <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+   
     {% else %}
     <button class="menu-toggle" id="menuToggle">
         <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
