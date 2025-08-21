@@ -274,7 +274,10 @@ def apostas_view(request):
     quantidade_apostas = usuario_apostas.count()
     ultima_aposta = usuario_apostas.first()
 
+
     context = {
+        'usuario': usuario,
+        'total_apostado': total_apostado,
         'usuario': usuario,
         'total_apostado': total_apostado,
         'quantidade_apostas': quantidade_apostas,
@@ -458,6 +461,7 @@ def encerrar_apostas_view(request):
 
                 # Filtra apenas apostas válidas e ainda não encerradas
                 apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+                
                 if not apostas.exists():
                     messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
                     return redirect('admin:core_aposta_changelist')

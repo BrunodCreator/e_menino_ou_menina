@@ -1,6 +1,3 @@
-// Seletores de elementos DOM
-
-// const blocks = document.querySelectorAll('.option-block');
 const modalOverlay = document.getElementById('modalOverlay');
 const selectedOptionDisplay = document.getElementById('selectedOptionDisplay');
 const betAmountInput = document.getElementById('betAmount');
@@ -42,31 +39,82 @@ let resolveMessagePromise = null;
  * @returns {Promise<boolean>} Retorna uma Promise que resolve para true se confirmado, false se cancelado (apenas para isConfirm=true).
  */
 function showMessageModal(message, isConfirm = false) {
+    if (!messageModalOverlay || !messageModalConfirmButton || !messageModalCancelButton || !messageModalText) {
+        console.error('Elementos do modal não encontrados no DOM.');
+        return Promise.resolve(false);
+    }
+
     messageModalText.textContent = message;
-    messageModalConfirmButton.style.display = isConfirm ? 'block' : 'none';
+    messageModalConfirmButton.style.display = 'block';
     messageModalCancelButton.style.display = isConfirm ? 'block' : 'none';
     messageModalOverlay.classList.add('show');
 
-    if (isConfirm) {
-        return new Promise(resolve => {
-            resolveMessagePromise = resolve;
-        });
-    } else {
-        const closeHandler = () => {
+    return new Promise(resolve => {
+        const closeModal = () => {
             messageModalOverlay.classList.remove('show');
-            messageModalConfirmButton.removeEventListener('click', closeHandler);
+            messageModalConfirmButton.removeEventListener('click', onOk);
+            messageModalCancelButton.removeEventListener('click', onCancel);
+            messageModalOverlay.removeEventListener('click', onOverlayClick);
         };
-        messageModalConfirmButton.addEventListener('click', closeHandler);
-        messageModalOverlay.addEventListener('click', function(e) {
+
+        const onOk = () => {
+            closeModal();
+            resolve(true);
+        };
+
+        const onCancel = () => {
+            closeModal();
+            resolve(false);
+        };
+
+        const onOverlayClick = (e) => {
             if (e.target === messageModalOverlay && !isConfirm) {
-                closeHandler();
+                closeModal();
+                resolve(true);
             }
-        });
-        return Promise.resolve(true); 
-        
-    }
+        };
+
+        messageModalConfirmButton.addEventListener('click', onOk);
+        messageModalCancelButton.addEventListener('click', onCancel);
+        messageModalOverlay.addEventListener('click', onOverlayClick);
+    });
 }
 
+
+// --- Função initLogout ---
+function initLogout() {
+    const logoutBtn = document.getElementById('logoutButton');
+    const logoutForm = document.getElementById('logoutForm');
+
+    if (!logoutBtn) return; // Se não houver botão, não faz nada
+    if (!logoutForm) {
+        console.error('Formulário de logout não encontrado!');
+        return;
+    }
+
+    logoutBtn.addEventListener('click', async function () {
+        if (!messageModalOverlay || !messageModalConfirmButton || !messageModalCancelButton) {
+            alert('Tem certeza que deseja sair da sua conta?'); // fallback simples
+            logoutForm.submit();
+            return;
+        }
+
+        const confirmed = await showMessageModal(
+            'Tem certeza que deseja sair da sua conta?',
+            true
+        );
+        if (confirmed) {
+            logoutBtn.disabled = true;
+            logoutForm.submit();
+        }
+    });
+}
+
+// --- Inicializa quando o DOM estiver pronto ---
+document.addEventListener('DOMContentLoaded', () => {
+    carregarDados(); // já existia
+    initLogout();    // chamamos aqui para garantir que o logout funcione
+});
 // Event listeners para os botões do modal de mensagem
 if (messageModalConfirmButton) {
     messageModalConfirmButton.addEventListener('click', () => {
