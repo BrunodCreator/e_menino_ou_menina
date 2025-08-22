@@ -116,7 +116,7 @@ def login_view(request):
         return JsonResponse({
             'success': True,
             'message': f'Bem-vindo(a), {user.nome}!',
-            'redirect_url': '/palpites/' # Redireciona para a página de palpites
+            'redirect_url': '/palpite/' # Redireciona para a página de palpites
         })
     else:
         # Se authenticate() retornou None, significa que as credenciais são inválidas
