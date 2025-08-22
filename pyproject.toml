@@ -17,6 +17,7 @@ dependencies = [
     "brcode>=1.2",
     "pixqrcodegen>=0.5",
     "pillow>=10.4.0",
+    "gunicorn>=23.0.0",
 ]
 
 [project.optional-dependencies]

@@ -17,18 +17,6 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = r'django-insecure-u%87nf+7k%55s=8u&p$mmw4_#5!h9&79)2lpbc2h8qa#-cp_^o'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*', '127.0.0.1', 'localhost', '192.168.1.2', '192.168.1.10', '192.168.1.23']
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -88,13 +76,19 @@ PASSWORD_HASHERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'CHA_REVELACAO', # O nome do DB que você criou no MySQL
-        'USER': 'sa',    # O nome do usuário MySQL que você criou
-        'PASSWORD': 'Fpto@123', # A senha do usuário MySQL que você criou
-        'HOST': '127.0.0.1',      # Ou '127.0.0.1'
-        'PORT': '3306',           # Porta padrão do MySQL
+        'NAME': os.environ.get('MYSQLDATABASE'),
+        'USER': os.environ.get('MYSQLUSER'),
+        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+        'HOST': os.environ.get('MYSQLHOST'),
+        'PORT': os.environ.get('MYSQLPORT', '3306'),
     }
 }
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'unsafe-secret')
+
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
