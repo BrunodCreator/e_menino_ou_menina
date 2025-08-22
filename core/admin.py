@@ -96,7 +96,7 @@ class UsuarioAdmin(UserAdmin):
 admin.site.login_form = CustomAdminAuthenticationForm
 
 
-from .models import palpite
+from .models import Palpite
 from django.urls import path
 from django.shortcuts import render, redirect, reverse
 from django import forms
@@ -112,7 +112,7 @@ def rejeitar_palpite(modeladmin, request, queryset):
     queryset.update(status='rejeitada')
 
 
-@admin.register(palpite)
+@admin.register(Palpite)
 class palpiteAdmin(admin.ModelAdmin):
     
     list_display = ('usuario', 'data_palpite','sexo_escolha', 'valor_palpite','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
@@ -143,7 +143,7 @@ class palpiteAdmin(admin.ModelAdmin):
       # Exemplo de como você pode adicionar o relatório em uma página customizada
     def changelist_view(self, request, extra_context=None):
         # Pega o relatório financeiro
-        relatorio = palpite.objects.get_relatorio_financeiro()
+        relatorio = Palpite.objects.get_relatorio_financeiro()
         # Adiciona o relatório financeiro ao contexto
         extra_context = extra_context or {}
         extra_context['relatorio_financeiro'] = relatorio

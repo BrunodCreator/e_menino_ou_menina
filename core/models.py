@@ -151,7 +151,7 @@ def money(x: Decimal) -> Decimal:
     return (x or Decimal('0')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-class palpiteManager(models.Manager):
+class PalpiteManager(models.Manager):
     """
     Manager personalizado para a classe palpite, contendo métodos
     para cálculos sobre valóres líquidos relacionados às palpites.
@@ -269,7 +269,7 @@ class palpiteManager(models.Manager):
             'balanco_cenarios': self.validar_balanco_financeiro(),
         }
             
-class palpite(models.Model):
+class Palpite(models.Model):
     """
     Modelo para registrar as palpites dos usuários no palpite do sexo do bebê.
     """
@@ -353,7 +353,7 @@ class palpite(models.Model):
 
 
     # Atribui o manager personalizado à classe palpite
-    objects = palpiteManager()
+    objects = PalpiteManager()
 
     class Meta:
         verbose_name = "palpite"
@@ -389,7 +389,7 @@ class palpite(models.Model):
         """
         try:
             # Acessa o manager através da instância do modelo para obter as odds
-            odds_atuais = palpite.objects.calcular_odds()
+            odds_atuais = Palpite.objects.calcular_odds()
             return odds_atuais.get(self.sexo_escolha, Decimal('1.00'))
         except Exception as e:
             # Idealmente, você pode logar este erro para depuração
@@ -410,10 +410,10 @@ class palpite(models.Model):
         Verifica se o sistema conseguiria pagar ESTA palpite
         com base no pote total e nas odds atuais (todos líquidos).
         """
-        total_pote = palpite.objects.get_total_pote()
+        total_pote = Palpite.objects.get_total_pote()
 
         total_mesmo_sexo = (
-            palpite.objects.filter(sexo_escolha=self.sexo_escolha, status='valida')
+            Palpite.objects.filter(sexo_escolha=self.sexo_escolha, status='valida')
             .aggregate(total=Sum('valor_para_pote'))['total']
             or Decimal('0.00')
         )
