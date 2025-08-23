@@ -13,7 +13,7 @@ from pixqrcodegen import Payload
 from io import StringIO
 import sys
 
-from .models import palpite 
+from .models import Palpite 
 
 User = get_user_model()
 
@@ -116,7 +116,7 @@ def login_view(request):
         return JsonResponse({
             'success': True,
             'message': f'Bem-vindo(a), {user.nome}!',
-            'redirect_url': '/palpites/' # Redireciona para a página de palpites
+            'redirect_url': '/palpite/' # Redireciona para a página de palpites
         })
     else:
         # Se authenticate() retornou None, significa que as credenciais são inválidas
@@ -233,11 +233,11 @@ def palpites_view(request):
     usuario = request.user
 
     # Verifica se há palpites encerradas no sistema
-    palpite_encerrada_global = palpite.objects.filter(encerrado=True).last()
+    palpite_encerrada_global = Palpite.objects.filter(encerrado=True).last()
 
     # Verifica se o usuário atual tem alguma palpite vencedora
     palpite_usuario = (
-        palpite.objects.filter(usuario=usuario, encerrado=True, status='Válida')
+        Palpite.objects.filter(usuario=usuario, encerrado=True, status='Válida')
     )
 
     if palpite_encerrada_global:
@@ -269,7 +269,7 @@ def palpites_view(request):
         return render(request, 'palpite.html', context)       
 
     # Caso contrário, tela normal de palpites
-    usuario_palpites = palpite.objects.filter(usuario=usuario, status='valida')
+    usuario_palpites = Palpite.objects.filter(usuario=usuario, status='valida')
     total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
     quantidade_palpites = usuario_palpites.count()
     ultima_palpite = usuario_palpites.first()
@@ -293,11 +293,11 @@ def palpites_view(request):
 @require_http_methods(["GET"])
 def get_dados_usuario_e_odds(request):
     try:
-        odds_data = palpite.objects.calcular_odds()
-        total_masculino = palpite.objects.get_total_pote_masculino()
-        total_feminino = palpite.objects.get_total_pote_feminino()
+        odds_data = Palpite.objects.calcular_odds()
+        total_masculino = Palpite.objects.get_total_pote_masculino()
+        total_feminino = Palpite.objects.get_total_pote_feminino()
 
-        usuario_palpites = palpite.objects.filter(usuario=request.user, status='valida')
+        usuario_palpites = Palpite.objects.filter(usuario=request.user, status='valida')
         total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
         quantidade_palpites = usuario_palpites.count()
         ultima_palpite = usuario_palpites.order_by('-data_palpite').first()
@@ -346,7 +346,7 @@ def iniciar_palpite_pix(request):
         if not valor_palpite or valor_palpite < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da palpite inválido. Mínimo de R$0.01.'}, status=400)
         
-        palpite = palpite.objects.create(
+        palpite = Palpite.objects.create(
             usuario=request.user,
             sexo_escolha=sexo_escolha,
             valor_palpite=valor_palpite,
@@ -393,16 +393,15 @@ def confirmar_pagamento_palpite(request):
 
         if not palpite_id:
             return JsonResponse({'error': 'ID da palpite ausente'}, status=400)
-        
-        palpite = get_object_or_404(palpite, id=palpite_id, usuario=request.user, status='pendente')
-
+        palpite = get_object_or_404(Palpite, id=palpite_id, usuario=request.user, status='pendente')
+        #print(palpite, palpite_id)#
         palpite.status = 'aguardando_validacao'
         palpite.save()
 
         # Recalcula e retorna os dados atualizados do usuário para o frontend
         # Filtra por palpites com status 'valida' para os cálculos do usuário
 
-        usuario_palpites = palpite.objects.filter(usuario=request.user, status='valida')
+        usuario_palpites = Palpite.objects.filter(usuario=request.user, status='valida')
         total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
         quantidade_palpites = usuario_palpites.count()
         ultima_palpite_obj = usuario_palpites.order_by('-data_palpite').first()
@@ -433,7 +432,7 @@ import logging
 from django.contrib import admin, messages
 from django.shortcuts import render, redirect, get_list_or_404
 from django import forms
-from .models import palpite
+from .models import Palpite
 
 class EncerramentoForm(forms.Form):
     OPCOES = (
@@ -460,7 +459,7 @@ def encerrar_palpites_view(request):
                 palpite_ids = [id_ for id_ in form.cleaned_data['palpite_ids'].split(',') if id_.isdigit()]
 
                 # Filtra apenas palpites válidas e ainda não encerradas
-                palpites = palpite.objects.filter(id__in=palpite_ids, encerrado=False)
+                palpites = Palpite.objects.filter(id__in=palpite_ids, encerrado=False)
                 
                 if not palpites.exists():
                     messages.warning(request, "Nenhuma palpite válida encontrada para encerrar.")
