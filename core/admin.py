@@ -115,7 +115,7 @@ def rejeitar_palpite(modeladmin, request, queryset):
 @admin.register(Palpite)
 class palpiteAdmin(admin.ModelAdmin):
     
-    list_display = ('usuario', 'data_palpite','sexo_escolha', 'valor_palpite','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
+    list_display = ('usuario', 'palpite_solidario' ,'data_palpite','sexo_escolha', 'valor_palpite','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
     
     list_filter = ('status', 'sexo_escolha')
 

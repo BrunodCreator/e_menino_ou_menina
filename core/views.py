@@ -512,7 +512,7 @@ def encerrar_palpites_view(request):
             # GET: mostra o formulário do admin
             palpite_ids = request.GET.get('ids', '')
             palpite_ids = [id_ for id_ in palpite_ids.split(',') if id_.isdigit()]
-            palpites = palpite.objects.filter(id__in=palpite_ids, encerrado=False)
+            palpites = Palpite.objects.filter(id__in=palpite_ids, encerrado=False)
             form = EncerramentoForm(initial={'palpite_ids': ','.join(palpite_ids)})
 
             if not palpites.exists():
