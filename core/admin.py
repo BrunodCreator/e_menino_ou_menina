@@ -126,7 +126,7 @@ class palpiteAdmin(admin.ModelAdmin):
     actions = [validar_palpite, rejeitar_palpite, 'encerrar_palpites']
 
     fieldsets = (
-    (None, {'fields': ('usuario', 'sexo_escolha', 'valor_palpite', 'valor_para_pote', 'status')}),
+    (None, {'fields': ('usuario','palpite_solidario','sexo_escolha', 'valor_palpite', 'valor_para_pote', 'status')}),
     ('Opções de Status', {'fields': ('ativo', 'is_active', 'is_staff', 'is_superuser')}),
     )
 

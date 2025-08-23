@@ -266,7 +266,7 @@ class PalpiteManager(models.Manager):
             'pote_masculino': money(self.get_total_pote_masculino()),
             'pote_feminino': money(self.get_total_pote_feminino()),
             'odds_atuais': self.calcular_odds(),
-            'balanco_cenarios': self.validar_balanco_financeiro(),
+            # 'balanco_cenarios': self.validar_balanco_financeiro(),
         }
             
 class Palpite(models.Model):
@@ -290,7 +290,12 @@ class Palpite(models.Model):
         help_text="Seu palpite para o sexo do bebê: 'M' para Menino, 'F' para Menina.",
         verbose_name="Palpite"
     )
-
+    
+    palpite_solidario = models.BooleanField(
+        default=True,
+        help_text='Caso ganhe, deseja contribuir com o valor total para os pais?',
+        verbose_name="Palpite solidário"
+    )
     # Este é o valor BRUTO que o usuário contribuiu
     valor_palpite = models.DecimalField(
         max_digits=8,
