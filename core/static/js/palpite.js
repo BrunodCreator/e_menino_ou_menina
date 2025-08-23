@@ -1,6 +1,3 @@
-// Seletores de elementos DOM
-const blocks = document.querySelectorAll('.option-block');
-const confirmButton = document.getElementById('confirmButton');
 const modalOverlay = document.getElementById('modalOverlay');
 const selectedOptionDisplay = document.getElementById('selectedOptionDisplay');
 const betAmountInput = document.getElementById('betAmount');
@@ -17,7 +14,11 @@ const mainContent = document.getElementById('mainContent');
 const userNameElement = document.getElementById('userName'); 
 const oddMeninoElement = document.getElementById('oddMenino');
 const oddMeninaElement = document.getElementById('oddMenina');
-
+const content1 = document.querySelector('.container'); 
+const content2 = document.querySelector('.container2'); 
+const confirmButton1 = document.querySelector('#confirmButton1');
+const confirmButton2 = document.querySelector('#confirmButton2');
+const blocks = [content1, content2];
 // Seletores para o novo modal de mensagem
 const messageModalOverlay = document.getElementById('messageModalOverlay');
 const messageModalContent = document.getElementById('messageModalContent');
@@ -145,7 +146,7 @@ if (messageModalOverlay) {
 
 
 /**
- * Carrega os dados do usuário, odds e informações de apostas do backend.
+ * Carrega os dados do usuário, odds e informações de palpites do backend.
  */
 async function carregarDados() {
     console.log('carregarDados: Iniciando carregamento de dados...');
@@ -185,12 +186,12 @@ async function carregarDados() {
             const oddMenina = parseFloat(data.odd_menina);
 
             if (oddMeninoElement) {
-                oddMeninoElement.textContent = `odd: ${oddMenino.toFixed(1)}x`;
+                oddMeninoElement.textContent = `Odd: ${oddMenino.toFixed(1)}x`;
             } else {
                 console.warn('carregarDados: Elemento oddMeninoElement não encontrado.');
             }
             if (oddMeninaElement) {
-                oddMeninaElement.textContent = `odd: ${oddMenina.toFixed(1)}x`;
+                oddMeninaElement.textContent = `Odd: ${oddMenina.toFixed(1)}x`;
             } else {
                 console.warn('carregarDados: Elemento oddMeninaElement não encontrado.');
             }
@@ -201,17 +202,17 @@ async function carregarDados() {
 
             // Atualizar dados do usuário
             if (totalBetElement && data.usuario) {
-                totalBetElement.textContent = data.usuario.total_apostado;
+                totalBetElement.textContent = data.usuario.total_palpitedo;
             } else {
                 console.warn('carregarDados: Elemento totalBetElement ou dados do usuário ausentes.');
             }
             if (betCountElement && data.usuario) {
-                betCountElement.textContent = data.usuario.quantidade_apostas;
+                betCountElement.textContent = data.usuario.quantidade_palpites;
             } else {
                 console.warn('carregarDados: Elemento betCountElement ou dados do usuário ausentes.');
             }
             if (lastBetElement && data.usuario) {
-                lastBetElement.textContent = data.usuario.ultima_aposta;
+                lastBetElement.textContent = data.usuario.ultima_palpite;
             } else {
                 console.warn('carregarDados: Elemento lastBetElement ou dados do usuário ausentes.');
             }
@@ -241,6 +242,7 @@ if (menuToggle && sidebar && mainContent) {
             sidebar.classList.add('open');
             menuToggle.classList.add('open');
             mainContent.classList.add('shifted');
+            document.querySelector("#menuToggle").style.display = 'none'
         } else {
             sidebar.classList.remove('open');
             menuToggle.classList.remove('open');
@@ -249,64 +251,126 @@ if (menuToggle && sidebar && mainContent) {
     });
 }
 
+//Ação bebes
+console.log(confirmButton1,confirmButton2)
 
-// Seleção das opções
-if (blocks && confirmButton) { // Adicionado confirmButton para garantir que ele exista
-    blocks.forEach(block => {
-        block.addEventListener('click', function() {
-            blocks.forEach(b => b.classList.remove('selected'));
-            
-            this.classList.add('selected');
-            
-            currentSelection = this.dataset.option;
-            currentOdds = parseFloat(this.dataset.odds);
+function selectBoy (){
+    currentSelection = 'menino';
+    currentOdds = parseFloat(content1.dataset.odds);
+    content1.style.filter = 'brightness(100%)';
+    content2.style.filter = 'brightness(50%)';
 
-            confirmButton.classList.remove('menino', 'menina');
-            if (currentSelection === 'menino') { 
-                confirmButton.classList.add('menino');
-            } else {
-                confirmButton.classList.add('menina');
-            }
+    confirmButton1.style.fontSize = '2em';
+    confirmButton1.style.padding = "10px";
+    confirmButton2.style.fontSize = '1em';
+    confirmButton2.style.padding = "1px";
+    
+    content2.style.width = "100vw";
+    content1.style.width = "200%";
+    document.querySelector("#menuToggle").style.display = 'flex'
+    document.querySelector("#sidebar").classList
 
-            confirmButton.classList.add('show');
-        });
-    });
+    const sidebar = document.getElementById("sidebar");
+
+    if (sidebar.classList.contains("open")) {
+        document.querySelector("#menuToggle").click()
+    } 
+
 }
 
+function selectGirl (){
+    currentSelection = 'menina';
+    currentOdds = parseFloat(content2.dataset.odds);
+    content2.style.filter = 'brightness(100%)';
+    content2.style.width = "200%";
+    content1.style.filter = 'brightness(50%)';
 
-// Confirmar seleção - abre modal
-if (confirmButton && selectedOptionDisplay && modalOverlay && betAmountInput && expectedReturnElement) { // Adicionado expectedReturnElement
-    confirmButton.addEventListener('click', function() {
-        if (currentSelection) {
-            const displayText = currentSelection === 'menino' ? 'MENINO' : 'MENINA';
-            selectedOptionDisplay.textContent = displayText;
-            modalOverlay.classList.add('show');
-            betAmountInput.value = '';
-            expectedReturnElement.textContent = 'R$ 0,00';
-            betAmountInput.focus();
-        }
-    });
+    confirmButton2.style.fontSize = '2em';
+    confirmButton2.style.padding = "10px";
+    
+    confirmButton1.style.fontSize = '1em';
+    confirmButton1.style.padding = "1px";
+    content1.style.width = "100vw";
+
+        document.querySelector("#menuToggle").style.display = 'flex'
+    document.querySelector("#sidebar").classList
+
+    const sidebar = document.getElementById("sidebar");
+
+    if (sidebar.classList.contains("open")) {
+        document.querySelector("#menuToggle").click()
+    } 
+    
 }
 
+content1.addEventListener('click',(selectBoy))
+content2.addEventListener('click',(selectGirl))
 
+// =======================
+// Abrir modal de palpite
+// =======================
+function openBetModal() {
+    if (!currentSelection) return; // Evita abrir sem seleção
+    if (!currentOdds || currentOdds === 0) {
+        console.warn('openBetModal: currentOdds inválido', currentOdds);
+        return;
+    }
+
+    selectedOptionDisplay.textContent = currentSelection === 'menino' ? 'MENINO' : 'MENINA';
+    modalOverlay.classList.add('show');
+
+    // Reset do input e retorno
+    betAmountInput.value = '';
+    expectedReturnElement.textContent = 'R$ 0,00';
+    betAmountInput.focus();
+}
+
+// Botões de confirmação
+[confirmButton1, confirmButton2].forEach(btn => btn.addEventListener('click', openBetModal));
+
+// =======================
+// Cancelar palpite / fechar modal
+// =======================
+cancelBetButton.addEventListener('click', () => {
+    modalOverlay.classList.remove('show');
+    currentSelection = null;
+    currentOdds = 0;
+});
+
+modalOverlay.addEventListener('click', e => {
+    if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('show');
+        currentSelection = null;
+        currentOdds = 0;
+    }
+});
+
+// =======================
 // Calcular retorno esperado
-if (betAmountInput && expectedReturnElement) {
-    betAmountInput.addEventListener('input', function() {
-        const betAmount = parseFloat(this.value) || 0;
-        const valueForPot = betAmount * 0.70;
-        const expectedReturn = valueForPot * currentOdds;
-        expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
-    });
-}
+// =======================
+betAmountInput.addEventListener('input', function() {
+    const value = this.value.replace(',', '.'); // Substitui vírgula por ponto
+    const betAmount = parseFloat(value) || 0;
+
+    if (!currentOdds || currentOdds === 0) {
+        expectedReturnElement.textContent = 'R$ 0,00';
+        return;
+    }
+
+    const valueForPot = betAmount * 0.70;
+    const expectedReturn = valueForPot * currentOdds;
+
+    expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
+});
 
 
-// Fazer aposta
+// Fazer palpite
 if (placeBetButton && betAmountInput && totalBetElement && betCountElement && lastBetElement) {
     placeBetButton.addEventListener('click', async function() {
         const betAmount = parseFloat(betAmountInput.value);
 
         if (!betAmount || betAmount < 0.01) {
-            showMessageModal('Por favor, insira um valor válido para a aposta (mínimo R$ 0,01).');
+            showMessageModal('Por favor, insira um valor válido para a palpite (mínimo R$ 0,01).');
             return;
         }
 
@@ -331,7 +395,7 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
                 },
                 body: JSON.stringify({
                     sexo_escolha: currentSelection === 'menino' ? 'M' : 'F',
-                    valor_aposta: betAmount
+                    valor_palpite: betAmount
                 })
             });
 
@@ -339,11 +403,11 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
             console.log('Response from /registrar/:', data);
 
             placeBetButton.disabled = false;
-            placeBetButton.textContent = 'Fazer Aposta';
+            placeBetButton.textContent = 'Fazer palpite';
 
             if (response.ok && data.success) {
-                // Store aposta_id for confirmation
-                window.currentApostaId = data.aposta_id;
+                // Store palpite_id for confirmation
+                window.currentpalpiteId = data.palpite_id;
 
                 const container = document.getElementById('pixQrCodeContainer');
                 container.innerHTML = '';  // wipe out any old QR
@@ -362,7 +426,7 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
 
                 document.getElementById('pixPayload').textContent = data.pix_payload;
                 document.getElementById('pixKey').textContent = data.chave_pix;
-                document.getElementById('pixValue').textContent = `R$ ${data.valor_aposta}`;
+                document.getElementById('pixValue').textContent = `R$ ${data.valor_palpite}`;
                 
                 // Show the PIX modal after content is updated
                 document.getElementById('pixModalOverlay').classList.add('show');
@@ -376,14 +440,14 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
 
                 await carregarDados(); // Refresh odds
             } else {
-                showMessageModal(data.error || 'Erro ao registrar aposta. Tente novamente.');
+                showMessageModal(data.error || 'Erro ao registrar palpite. Tente novamente.');
             }
 
         } catch (error) {
-            console.error('Erro ao processar aposta:', error);
+            console.error('Erro ao processar palpite:', error);
             placeBetButton.disabled = false;
-            placeBetButton.textContent = 'Fazer Aposta';
-            showMessageModal('Erro ao processar aposta. Tente novamente.');
+            placeBetButton.textContent = 'Fazer palpite';
+            showMessageModal('Erro ao processar palpite. Tente novamente.');
         }
     });
 }
@@ -401,8 +465,8 @@ document.getElementById('copyPixButton').addEventListener('click', function() {
 
 // New button to confirm payment
 document.getElementById('confirmPixPayment').addEventListener('click', async function() {
-    if (!window.currentApostaId) {
-        showMessageModal('Erro: ID da aposta não encontrado.');
+    if (!window.currentpalpiteId) {
+        showMessageModal('Erro: ID da palpite não encontrado.');
         return;
     }
 
@@ -410,7 +474,7 @@ document.getElementById('confirmPixPayment').addEventListener('click', async fun
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
             document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
 
-        const response = await fetch('/confirmar_pagamento_aposta/', {
+        const response = await fetch('/confirmar_pagamento_palpite/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -418,12 +482,12 @@ document.getElementById('confirmPixPayment').addEventListener('click', async fun
                 'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({
-                aposta_id: window.currentApostaId
+                palpite_id: window.currentpalpiteId
             })
         });
 
         const data = await response.json();
-        console.log('Response from /confirmar_pagamento_aposta/:', data);
+        console.log('Response from /confirmar_pagamento_palpite/:', data);
 
         if (response.ok && data.success) {
             showMessageModal(data.message);
@@ -451,7 +515,7 @@ document.getElementById('pixModalOverlay').addEventListener('click', function(e)
     }
 });
 
-// Cancelar aposta
+// Cancelar palpite
 if (cancelBetButton && modalOverlay) {
     cancelBetButton.addEventListener('click', function() {
         modalOverlay.classList.remove('show');

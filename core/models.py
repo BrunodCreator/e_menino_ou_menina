@@ -89,7 +89,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     ativo = models.BooleanField(
         verbose_name='Usuário Ativo',
         default=True,
-        help_text="Determina se o usuário pode fazer apostas. Desmarque para desativar."
+        help_text="Determina se o usuário pode fazer palpites. Desmarque para desativar."
     )
 
     chave_pix = models.CharField(
@@ -137,7 +137,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return self.telefone
 
     #TODO depois olhar se quero escrever uma função para desabilitar o usuário
-    def pode_apostar(self):
+    def pode_palpite(self):
         return self.ativo
 
 
@@ -151,15 +151,15 @@ def money(x: Decimal) -> Decimal:
     return (x or Decimal('0')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-class ApostaManager(models.Manager):
+class PalpiteManager(models.Manager):
     """
-    Manager personalizado para a classe Aposta, contendo métodos
-    para cálculos sobre valóres líquidos relacionados às apostas.
+    Manager personalizado para a classe palpite, contendo métodos
+    para cálculos sobre valóres líquidos relacionados às palpites.
     """
     
     def get_total_pote_masculino(self):
         """
-        Retorna o total do pote masculino (70% dos valores apostados validados).
+        Retorna o total do pote masculino (70% dos valores palpitedos validados).
         """
         return self.filter(
             sexo_escolha='M',
@@ -170,7 +170,7 @@ class ApostaManager(models.Manager):
     
     def get_total_pote_feminino(self):
         """
-        Retorna o total do pote feminino (70% dos valores apostados validados).
+        Retorna o total do pote feminino (70% dos valores palpitedos validados).
         """
         return self.filter(
             sexo_escolha='F',
@@ -187,19 +187,19 @@ class ApostaManager(models.Manager):
     
     def get_total_arrecadado_bruto(self):
         """
-        Retorna o total bruto arrecadado (100% dos valores apostados validados).
+        Retorna o total bruto arrecadado (100% dos valores palpitedos validados).
         """
         return self.filter(
             status='valida'
         ).aggregate(
-            total=Sum('valor_aposta')
+            total=Sum('valor_palpite')
         )['total'] or Decimal('0.00')
     
     def get_total_para_pais(self):
         """
         Retorna o total destinado aos pais (30% do total bruto arrecadado).
         """
-        return money(self.get_total_arrecadado_bruto() * Decimal('0.30'))
+        return money(self.get_total_arrecadado_bruto() * Decimal('0.30')) #TODO LEMBRAR DE MUDAR
     
     def calcular_odds(self):
         """
@@ -211,7 +211,7 @@ class ApostaManager(models.Manager):
         total_feminino = self.get_total_pote_feminino()
         total_geral_pote = total_masculino + total_feminino
         
-        # Se não há apostas válidas, as odds são 1.00 para ambos
+        # Se não há palpites válidas, as odds são 1.00 para ambos
         if total_geral_pote == Decimal('0.00'):
             return {'M': Decimal('1.00'), 'F': Decimal('1.00')}
         
@@ -235,15 +235,15 @@ class ApostaManager(models.Manager):
         
         cenarios = []
         for sexo_vencedor in ['M', 'F']:
-            apostas_vencedoras = self.filter(
+            palpites_vencedoras = self.filter(
                 sexo_escolha=sexo_vencedor,
                 status='valida'
             )
             
             total_a_pagar = Decimal('0.00')
 
-            for aposta in apostas_vencedoras:
-                total_a_pagar += aposta.valor_para_pote * odds[sexo_vencedor]    
+            for palpite in palpites_vencedoras:
+                total_a_pagar += palpite.valor_para_pote * odds[sexo_vencedor]    
             
             total_a_pagar = money(total_a_pagar)
             cenarios.append({
@@ -257,7 +257,7 @@ class ApostaManager(models.Manager):
     
     def get_relatorio_financeiro(self):
         """ 
-        Retorna um relatório completo da situação financeira das apostas.
+        Retorna um relatório completo da situação financeira das palpites.
         """
         return {
             'total_arrecadado_bruto': money(self.get_total_arrecadado_bruto()),
@@ -269,14 +269,14 @@ class ApostaManager(models.Manager):
             'balanco_cenarios': self.validar_balanco_financeiro(),
         }
             
-class Aposta(models.Model):
+class Palpite(models.Model):
     """
-    Modelo para registrar as apostas dos usuários no palpite do sexo do bebê.
+    Modelo para registrar as palpites dos usuários no palpite do sexo do bebê.
     """
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='apostas',
+        related_name='palpites',
         verbose_name="Usuário"
     )
 
@@ -292,7 +292,7 @@ class Aposta(models.Model):
     )
 
     # Este é o valor BRUTO que o usuário contribuiu
-    valor_aposta = models.DecimalField(
+    valor_palpite = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         blank=False,
@@ -300,10 +300,10 @@ class Aposta(models.Model):
         default=Decimal('0.01'),
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Valor da sua contribuição (mínimo de R$0,01).",
-        verbose_name="Valor da Aposta"
+        verbose_name="Valor da palpite"
     )
 
-    # Valor efetivamente adicionado ao pote (75% do valor_aposta)
+    # Valor efetivamente adicionado ao pote (75% do valor_palpite)
     valor_para_pote = models.DecimalField(
         max_digits=8,
         decimal_places=2,
@@ -314,9 +314,9 @@ class Aposta(models.Model):
         verbose_name="Valor para o Pote"
     )
 
-    data_aposta = models.DateTimeField(
+    data_palpite = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Data da Aposta"
+        verbose_name="Data da palpite"
     )
 
     valor_para_pagar = models.DecimalField(
@@ -325,14 +325,14 @@ class Aposta(models.Model):
         default=Decimal('0.00'),
         blank=True,
         null=True,
-        help_text="Valor preenchido no momento em que as apostas encerrarem.",
+        help_text="Valor preenchido no momento em que as palpites encerrarem.",
         verbose_name="Valor do pagamento dos ganhadores"    
     )
 
     encerrado = models.BooleanField(
         default=False,
-        verbose_name="Aposta encerrada",
-        help_text="Indica se a aposta foi encerrada e não aceita mais novos palpites"
+        verbose_name="palpite encerrada",
+        help_text="Indica se a palpite foi encerrada e não aceita mais novos palpites"
     )
 
 
@@ -347,26 +347,26 @@ class Aposta(models.Model):
         max_length=20,
         choices=STATUS_PAYMENT,
         default='pendente',
-        help_text="Status atual da aposta (ex: pendente, aguardando validação, válida).",
-        verbose_name="Status da Aposta"
+        help_text="Status atual da palpite (ex: pendente, aguardando validação, válida).",
+        verbose_name="Status da palpite"
     )
 
 
-    # Atribui o manager personalizado à classe Aposta
-    objects = ApostaManager()
+    # Atribui o manager personalizado à classe palpite
+    objects = PalpiteManager()
 
     class Meta:
-        verbose_name = "Aposta"
-        verbose_name_plural = "Apostas"
-        ordering = ['-data_aposta'] # Ordena as apostas da mais recente para a mais antiga
+        verbose_name = "palpite"
+        verbose_name_plural = "palpites"
+        ordering = ['-data_palpite'] # Ordena as palpites da mais recente para a mais antiga
         indexes = [
             models.Index(fields=['status']),
             models.Index(fields=['sexo_escolha', 'status']),
-            models.Index(fields=['-data_aposta']),
+            models.Index(fields=['-data_palpite']),
          ]
 
     def __str__(self):
-        return f"Aposta de {self.usuario.nome} - {self.get_sexo_escolha_display()} - {self.get_status_display()}"
+        return f"palpite de {self.usuario.nome} - {self.get_sexo_escolha_display()} - {self.get_status_display()}"
                 
     
 
@@ -374,46 +374,46 @@ class Aposta(models.Model):
         """
         Sobrescreve o método save para calcular 'valor_para_pote' antes de salvar.
         """
-        # Calcula 70% do valor_aposta antes de salvar
-        if self.valor_aposta is not None:
-            self.valor_para_pote = money(self.valor_aposta * Decimal('0.70'))
+        # Calcula 70% do valor_palpite antes de salvar
+        if self.valor_palpite is not None:
+            self.valor_para_pote = money(self.valor_palpite * Decimal('0.70')) #TODO por favor lembrar de mudar para o valor correto
         else:
             self.valor_para_pote = Decimal('0.00')
 
         super().save(*args, **kwargs)
 
     @property
-    def odd_da_aposta(self) -> Decimal:
+    def odd_da_palpite(self) -> Decimal:
         """
         Odd pari-mutuel atual do sexo escolhido
         """
         try:
             # Acessa o manager através da instância do modelo para obter as odds
-            odds_atuais = Aposta.objects.calcular_odds()
+            odds_atuais = Palpite.objects.calcular_odds()
             return odds_atuais.get(self.sexo_escolha, Decimal('1.00'))
         except Exception as e:
             # Idealmente, você pode logar este erro para depuração
-            print(f"Erro ao calcular odd_da_aposta: {e}")
+            print(f"Erro ao calcular odd_da_palpite: {e}")
             return Decimal('1.00')  # Fallback seguro
 
     @property
     def retorno_potencial(self) -> Decimal:
         """
-        Calcula o retorno potencial desta aposta com base no valor líquido
-        apostado e nas odds atuais.
+        Calcula o retorno potencial desta palpite com base no valor líquido
+        palpitedo e nas odds atuais.
         """
-        return money(self.valor_para_pote * self.odd_da_aposta)
+        return money(self.valor_para_pote * self.odd_da_palpite)
 
 
     def validar_pagamento_possivel(self) -> bool:
         """
-        Verifica se o sistema conseguiria pagar ESTA aposta
+        Verifica se o sistema conseguiria pagar ESTA palpite
         com base no pote total e nas odds atuais (todos líquidos).
         """
-        total_pote = Aposta.objects.get_total_pote()
+        total_pote = Palpite.objects.get_total_pote()
 
         total_mesmo_sexo = (
-            Aposta.objects.filter(sexo_escolha=self.sexo_escolha, status='valida')
+            Palpite.objects.filter(sexo_escolha=self.sexo_escolha, status='valida')
             .aggregate(total=Sum('valor_para_pote'))['total']
             or Decimal('0.00')
         )
@@ -423,6 +423,6 @@ class Aposta(models.Model):
             pagamento_necessario = money(self.valor_para_pote * odd_real)
             return pagamento_necessario <= total_pote
 
-        # Sem outras apostas do mesmo sexo → nada a pagar além desta
+        # Sem outras palpites do mesmo sexo → nada a pagar além desta
         # (consideramos possível por padrão)
         return True

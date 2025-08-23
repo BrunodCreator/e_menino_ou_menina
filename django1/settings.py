@@ -26,7 +26,7 @@ SECRET_KEY = r'django-insecure-u%87nf+7k%55s=8u&p$mmw4_#5!h9&79)2lpbc2h8qa#-cp_^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.2', '192.168.1.10']
+ALLOWED_HOSTS = ['*', '127.0.0.1', 'localhost', '192.168.1.2', '192.168.1.10', '192.168.1.23']
 
 
 # Application definition
@@ -91,7 +91,7 @@ DATABASES = {
         'NAME': 'CHA_REVELACAO', # O nome do DB que você criou no MySQL
         'USER': 'sa',    # O nome do usuário MySQL que você criou
         'PASSWORD': 'Fpto@123', # A senha do usuário MySQL que você criou
-        'HOST': 'localhost',      # Ou '127.0.0.1'
+        'HOST': '127.0.0.1',      # Ou '127.0.0.1'
         'PORT': '3306',           # Porta padrão do MySQL
     }
 }

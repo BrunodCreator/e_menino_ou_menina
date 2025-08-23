@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	{% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faça seu palpite</title>
+    <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/palpite.css' %}" defer>
+    <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    {% if palpite_encerrada_global and not palpite_usuario %}
+        <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
+                <p>Teste</p>
+            </div>
+    
+    {% elif palpite_encerrada_global and palpite_usuario %}
+        {% if valores_recebidos > 0 %}
+            <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
+                <!-- <p>Você acertou, o bebê é {{palpite_usuario.palpite}}</p> -->
+                 <p>Quantidade de palpites: {{quantidade_palpites}}</p>
+                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                <p>A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}</p>
+                <p>Você vai receber: R$ {{valores_recebidos}}</p>
+                 <h3>Suas palpites:</h3>
+            <ul>
+                {% for palpite in palpite_usuario %}
+                    <li>
+                        Palpite: {% if palpite.sexo_escolha == "M" %}
+                                    Menino
+                                {% else %}
+                                    Menina
+                                {% endif %} |
+                        Valor: R$ {{ palpite.valor_palpite }} |
+                        Receberá: R$ {{ palpite.valor_para_pagar }}
+                    </li>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div id="resultado-encerrado" class="error">
+                <!-- <p>Você errou! O bebê é {{palpite_encerrada_global.palpite}}</p> -->
+                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+            </div>
+        {% endif %}
+   
+    {% else %}
+    <button class="menu-toggle" id="menuToggle">
+        <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
+    </button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="user-info">
+            <div class="user-title">Dados do Usuário</div>
+            
+            <div class="info-item">
+                <div class="info-label">Nome</div>
+                <!-- O nome do usuário será populado via JS na função carregarDados -->
+                <!--div class="info-value" id="userName">{{ usuario.get_full_name|default:usuario.nome}}</div-->
+                <div class="info-value" id="userName">Carregando...</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Total palpitedo</div>
+                <div class="info-value money" id="totalBet">R$ 0,00</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">palpites Realizadas</div>
+                <div class="info-value" id="betCount">0</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Última palpite</div>
+                <div class="info-value" id="lastBet">-</div>
+            </div>
+        </div>
+        
+        <button class="logout-button" id="logoutButton">
+            Sair da Conta
+        </button>
+        <form id="logoutForm" method="POST" action="/logout/" style="display: none;">
+            {% csrf_token %}
+        </form>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="container">
+            <div class="odds-text" id="oddMenino">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton1">
+                    CONFIRMAR
+                </button>
+        </div>
+        <div class="container2" id="container2">   
+            <div class="odds-text" id="oddMenina">odd: 1.0x</div>
+                <button class="conxfirm-button" id="confirmButton2">
+                    CONFIRMAR
+                </button>
+        </div>
+
+    </div>
+
+    <!-- Modal do formulário de palpite -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="bet-form">
+            <h2 class="form-title">Fazer palpite</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Opção Selecionada:</label>
+                <div style="font-weight: 600; color: #333; font-size: 16px;" id="selectedOptionDisplay"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="betAmount">Valor da palpite (R$):</label>
+                <input type="number" id="betAmount" class="form-input" placeholder="0,00" min="1" step="0.01">
+            </div>
+            
+            <div class="return-info">
+                <div class="return-label">Retorno Esperado:</div>
+                <div class="return-value" id="expectedReturn">R$ 0,00</div>
+            </div>
+            
+            <div class="form-buttons">
+                <button class="form-button btn-secondary" id="cancelBet">Cancelar</button>
+                <button class="form-button btn-primary" id="placeBet">Fazer palpite</button>
+            </div>
+        </div>
+    </div>
+
+     <!-- Novo Modal de Mensagem/Confirmação (Substitui alert/confirm) -->
+    <div class="modal-overlay" id="messageModalOverlay">
+        <div class="bet-form" id="messageModalContent">
+            <h2 class="form-title">Mensagem</h2>
+            <p id="messageModalText" style="text-align: center; margin-bottom: 20px;"></p>
+            <div class="form-buttons">
+                <button class="form-button btn-secondary" id="messageModalCancelButton" style="display: none;">Cancelar</button>
+                <button class="form-button btn-primary" id="messageModalConfirmButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Novo Modal para Detalhes do PIX -->
+    <div class="modal-overlay" id="pixModalOverlay">
+        <div class="bet-form">
+            <h2 class="form-title">Pagar palpite via PIX</h2>
+            <div class="form-group">
+                <label class="form-label">QR Code:</label>
+                <div id="pixQrCodeContainer"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Código PIX:</label>
+                <p id="pixPayload" style="font-family: monospace; word-wrap: break-word; background-color: #f5f5f5; padding: 10px; border-radius: 5px;"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Chave PIX:</label>
+                <p id="pixKey"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Valor:</label>
+                <p id="pixValue"></p>
+            </div>
+            <div class="form-buttons">
+                <button class="form-button btn-primary" id="copyPixButton">Copiar Código PIX</button>
+                <button class="form-button btn-primary" id="confirmPixPayment">Confirmar Pagamento</button>
+                <button class="form-button btn-secondary" id="closePixModal">Fechar</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
+	<script src="{% static 'js/palpite.js' %}"></script>
+</body>
+</html>

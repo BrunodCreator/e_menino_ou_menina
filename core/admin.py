@@ -96,54 +96,54 @@ class UsuarioAdmin(UserAdmin):
 admin.site.login_form = CustomAdminAuthenticationForm
 
 
-from .models import Aposta
+from .models import Palpite
 from django.urls import path
 from django.shortcuts import render, redirect, reverse
 from django import forms
 from django.contrib import messages
-from .views import encerrar_apostas_view
+from .views import encerrar_palpites_view
 
 
-def validar_aposta(modeladmin, request, queryset):
+def validar_palpite(modeladmin, request, queryset):
     queryset.update(status='valida')
 
 
-def rejeitar_aposta(modeladmin, request, queryset):
+def rejeitar_palpite(modeladmin, request, queryset):
     queryset.update(status='rejeitada')
 
 
-@admin.register(Aposta)
-class ApostaAdmin(admin.ModelAdmin):
+@admin.register(Palpite)
+class palpiteAdmin(admin.ModelAdmin):
     
-    list_display = ('usuario', 'data_aposta','sexo_escolha', 'valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
+    list_display = ('usuario', 'data_palpite','sexo_escolha', 'valor_palpite','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
     
     list_filter = ('status', 'sexo_escolha')
 
     search_fields = ('usuario__nome', 'status')
 
-    ordering = ('-data_aposta',)
+    ordering = ('-data_palpite',)
 
-    actions = [validar_aposta, rejeitar_aposta, 'encerrar_apostas']
+    actions = [validar_palpite, rejeitar_palpite, 'encerrar_palpites']
 
     fieldsets = (
-    (None, {'fields': ('usuario', 'sexo_escolha', 'valor_aposta', 'valor_para_pote', 'status')}),
+    (None, {'fields': ('usuario', 'sexo_escolha', 'valor_palpite', 'valor_para_pote', 'status')}),
     ('Opções de Status', {'fields': ('ativo', 'is_active', 'is_staff', 'is_superuser')}),
     )
 
 
-    def encerrar_apostas(self, request, queryset):
+    def encerrar_palpites(self, request, queryset):
         if not queryset.exists():
-            messages.error(request, "Nenhuma aposta selecionada!")
+            messages.error(request, "Nenhuma palpite selecionada!")
             return
         ids = ','.join(str(a.id)for a in queryset)
-        url = reverse('admin:encerrar_apostas')
+        url = reverse('admin:encerrar_palpites')
         return redirect(f"{url}?ids={ids}")
-    encerrar_apostas.short_description =  "🚨 ENCERRAR TODAS AS APOSTAS E CALCULAR PAGAMENTOS"
+    encerrar_palpites.short_description =  "🚨 ENCERRAR TODAS AS palpiteS E CALCULAR PAGAMENTOS"
 
       # Exemplo de como você pode adicionar o relatório em uma página customizada
     def changelist_view(self, request, extra_context=None):
         # Pega o relatório financeiro
-        relatorio = Aposta.objects.get_relatorio_financeiro()
+        relatorio = Palpite.objects.get_relatorio_financeiro()
         # Adiciona o relatório financeiro ao contexto
         extra_context = extra_context or {}
         extra_context['relatorio_financeiro'] = relatorio
@@ -173,7 +173,7 @@ class ApostaAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('encerrar_apostas/', self.admin_site.admin_view(encerrar_apostas_view), name='encerrar_apostas'),
+            path('encerrar_palpites/', self.admin_site.admin_view(encerrar_palpites_view), name='encerrar_palpites'),
         ]
         return custom_urls + urls
 

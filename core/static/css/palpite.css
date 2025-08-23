@@ -261,11 +261,8 @@ html, body {
 .main-content {
     transition: margin-left 0.3s ease;
     margin-left: 0;
-    padding-top: 80px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    min-height: 100vh;
     box-sizing: border-box;
 }
 
@@ -273,14 +270,69 @@ html, body {
     margin-left: 250px;
 }
 
+/* Contêiner principal 1 */
 .container {
+    width: 100vw;               /* largura total da tela */
+    height: 100vh;               /* metade da altura da tela */
+    background-image: url("midias/Image/Gemini_Generated_Image_rld6kgrld6kgrld6.png");
+    background-size: cover;     /* cobre toda a área */
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: end;    /* centraliza horizontalmente o conteúdo */
+    align-items: center;  
+    gap: 30px;  
+    cursor: pointer;  
+    filter: brightness(50%);           /* centraliza verticalmente o conteúdo */
+    flex-direction: column;   
+    padding-bottom: 60px;     /* espaçamento entre elementos internos */
+    transition: filter 0.3s ease, width 0.3s ease;
+}
+
+/* Contêiner 2 */
+.container2 {
+    width: 100vw;
+    height: 100vh;               /* metade da altura da tela */
+    background-image: url("midias/Image/Gemini_Generated_Image_shyh9xshyh9xshyh.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-top: 50px;
-    padding: 0 20px;
-    width: 100%;
+    align-items: center;
+    gap: 30px;  
+    cursor: pointer;  
+    filter: brightness(50%);      
+    flex-direction: column;        /* espaçamento entre elementos internos */
+    justify-content: end;    /* centraliza horizontalmente o conteúdo */
+    padding-bottom: 60px;     /* espaçamento entre elementos internos */
+    transition: filter 0.3s ease, width 0.3s ease;
+}
+
+
+
+#confirmButton1{
+    border:4px solid e186b5;
+    border-radius: 20px;
+    background-color: transparent; 
+    border-color: #94c1f8;
+    color: white;
+    font-size: 2em;
+    padding: 10px;
+    transition: all 0.3s ease;
+    font-weight: 550;
+}
+
+#confirmButton2{
+    border:2px solid e186b5;
+    border-radius: 20px;
+    background-color: transparent; 
+    border-color: #e186b5;
+    color: white;
+    font-size: 2em;
+    padding: 10px;
+    transition: all 0.3s ease;
+    font-weight: 550;
 }
 
 .option-block {
@@ -341,9 +393,9 @@ html, body {
 }
 
 .odds-text {
-    font-size: 24px;
+    font-size: 4em;
     font-weight: 600;
-    color: #666;
+    color: #ffffff;
 }
 
 .confirm-button {
@@ -387,17 +439,11 @@ html, body {
   .sidebar {
     width: 200px;
     left: -230px;
+    padding-bottom: 65px;  
   }
 
   .main-content.shifted {
     margin-left: 200px;
-  }
-
-  .container {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 0 10px;
   }
 
   .option-block {
@@ -411,7 +457,7 @@ html, body {
   }
 
   .odds-text {
-    font-size: 20px;
+    font-size: 30px;
   }
 
   .confirm-button {
@@ -452,7 +498,8 @@ html, body {
 @media (max-width: 480px) {
   .form-title     { font-size: 18px; }
   .option-text    { font-size: 26px; }
-  .odds-text      { font-size: 18px; }
+  .odds-text      { font-size: 30px;
+                    font-weight: 800; }
   .form-input,
   .form-button    { font-size: 14px; padding: 10px; }
   .bet-form       { padding: 15px; }
