@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faça seu palpite</title>
     <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <link rel="stylesheet" href="{% static 'css/apostas.css' %}" defer>
+    <link rel="stylesheet" href="{% static 'css/palpite.css' %}" defer>
     <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
+<<<<<<< HEAD:core/templates/apostas.html
 {% if aposta_encerrada_global %}
     <!-- Sidebar e botão de menu continuam -->
     <button class="menu-toggle" id="menuToggle">
@@ -161,6 +162,47 @@
         }
     </style>
 {% else %}
+=======
+    {% if palpite_encerrada_global and not palpite_usuario %}
+        <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
+                <p>Teste</p>
+            </div>
+    
+    {% elif palpite_encerrada_global and palpite_usuario %}
+        {% if valores_recebidos > 0 %}
+            <div id="resultado-encerrado" class="celebration">
+                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
+                <!-- <p>Você acertou, o bebê é {{palpite_usuario.palpite}}</p> -->
+                 <p>Quantidade de palpites: {{quantidade_palpites}}</p>
+                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                <p>A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}</p>
+                <p>Você vai receber: R$ {{valores_recebidos}}</p>
+                 <h3>Suas palpites:</h3>
+            <ul>
+                {% for palpite in palpite_usuario %}
+                    <li>
+                        Palpite: {% if palpite.sexo_escolha == "M" %}
+                                    Menino
+                                {% else %}
+                                    Menina
+                                {% endif %} |
+                        Valor: R$ {{ palpite.valor_palpite }} |
+                        Receberá: R$ {{ palpite.valor_para_pagar }}
+                    </li>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div id="resultado-encerrado" class="error">
+                <!-- <p>Você errou! O bebê é {{palpite_encerrada_global.palpite}}</p> -->
+                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+            </div>
+        {% endif %}
+   
+    {% else %}
+>>>>>>> ba67ebcf00386029ef6969efefa9c4b4cf16e35c:core/templates/palpite.html
     <button class="menu-toggle" id="menuToggle">
         <span>&#8285;</span>  <!-- Usando o caractere de reticências vertical -->
     </button>
@@ -177,17 +219,17 @@
             </div>
             
             <div class="info-item">
-                <div class="info-label">Total Apostado</div>
+                <div class="info-label">Total palpitedo</div>
                 <div class="info-value money" id="totalBet">R$ 0,00</div>
             </div>
             
             <div class="info-item">
-                <div class="info-label">Apostas Realizadas</div>
+                <div class="info-label">palpites Realizadas</div>
                 <div class="info-value" id="betCount">0</div>
             </div>
             
             <div class="info-item">
-                <div class="info-label">Última Aposta</div>
+                <div class="info-label">Última palpite</div>
                 <div class="info-value" id="lastBet">-</div>
             </div>
         </div>
@@ -216,10 +258,10 @@
 
     </div>
 
-    <!-- Modal do formulário de aposta -->
+    <!-- Modal do formulário de palpite -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="bet-form">
-            <h2 class="form-title">Fazer Aposta</h2>
+            <h2 class="form-title">Fazer palpite</h2>
             
             <div class="form-group">
                 <label class="form-label">Opção Selecionada:</label>
@@ -227,7 +269,7 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label" for="betAmount">Valor da Aposta (R$):</label>
+                <label class="form-label" for="betAmount">Valor da palpite (R$):</label>
                 <input type="number" id="betAmount" class="form-input" placeholder="0,00" min="1" step="0.01">
             </div>
             
@@ -238,7 +280,7 @@
             
             <div class="form-buttons">
                 <button class="form-button btn-secondary" id="cancelBet">Cancelar</button>
-                <button class="form-button btn-primary" id="placeBet">Fazer Aposta</button>
+                <button class="form-button btn-primary" id="placeBet">Fazer palpite</button>
             </div>
         </div>
     </div>
@@ -258,7 +300,7 @@
     <!-- Novo Modal para Detalhes do PIX -->
     <div class="modal-overlay" id="pixModalOverlay">
         <div class="bet-form">
-            <h2 class="form-title">Pagar Aposta via PIX</h2>
+            <h2 class="form-title">Pagar palpite via PIX</h2>
             <div class="form-group">
                 <label class="form-label">QR Code:</label>
                 <div id="pixQrCodeContainer"></div>
@@ -285,6 +327,6 @@
     {% endif %}
 
     
-	<script src="{% static 'js/apostas.js' %}"></script>
+	<script src="{% static 'js/palpite.js' %}"></script>
 </body>
 </html>

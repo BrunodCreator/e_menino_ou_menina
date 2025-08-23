@@ -13,7 +13,7 @@ from pixqrcodegen import Payload
 from io import StringIO
 import sys
 
-from .models import Aposta 
+from .models import palpite 
 
 User = get_user_model()
 
@@ -48,10 +48,10 @@ def generate_pix_payload(name, pix_key, value, city, txtID):
 def login_page(request):
     """
     Exibe a página HTML do formulário de login.
-    Se o usuário já estiver autenticado, redireciona para a página de apostas.
+    Se o usuário já estiver autenticado, redireciona para a página de palpites.
     """
     if request.user.is_authenticated:
-        return redirect('apostas_page')
+        return redirect('palpite_page')
     return render(request, 'login.html')
 
 
@@ -116,7 +116,7 @@ def login_view(request):
         return JsonResponse({
             'success': True,
             'message': f'Bem-vindo(a), {user.nome}!',
-            'redirect_url': '/apostas/' # Redireciona para a página de apostas
+            'redirect_url': '/palpites/' # Redireciona para a página de palpites
         })
     else:
         # Se authenticate() retornou None, significa que as credenciais são inválidas
@@ -229,49 +229,63 @@ def cadastro_usuario(request):
 # Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
 @login_required
 @require_http_methods(["GET"])
-def apostas_view(request):
+def palpites_view(request):
     usuario = request.user
 
-    # Verifica se há apostas encerradas no sistema
-    aposta_encerrada_global = Aposta.objects.filter(encerrado=True).last()
-    
+    # Verifica se há palpites encerradas no sistema
+    palpite_encerrada_global = palpite.objects.filter(encerrado=True).last()
 
-    # Verifica se o usuário atual tem alguma aposta vencedora
-    aposta_vencedora_usuario = (
-        Aposta.objects.filter(usuario=usuario, encerrado=True, status='Válida')
-        .exclude(valor_para_pagar__lte=0)
-        .last()
+    # Verifica se o usuário atual tem alguma palpite vencedora
+    palpite_usuario = (
+        palpite.objects.filter(usuario=usuario, encerrado=True, status='Válida')
     )
 
-    if aposta_encerrada_global:
+    if palpite_encerrada_global:
             
-        if aposta_vencedora_usuario and aposta_encerrada_global:
-            ganhos = Aposta.objects.filter(encerrado=True, status='Válida')
+        if palpite_usuario:
+            valores_recebidos = palpite_usuario.aggregate(total=Sum('valor_para_pagar'))['total'] or Decimal('0.00')
+            valores_palpitedos = palpite_usuario.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
+            valor_contribuicao = (valores_palpitedos * Decimal("0.30")).quantize(Decimal('0.01'))
+            quantidade_palpites = palpite_usuario.count()
+            
             context = {
                 'usuario': usuario,
-                'ganhos': ganhos,
+                'palpite_encerrada_global': palpite_encerrada_global,
+                'palpite_usuario': palpite_usuario,
+                'quantidade_palpites': quantidade_palpites,
+                'valor_contribuicao': valor_contribuicao,
+                'valores_palpitedos': valores_palpitedos,
+                'valores_recebidos': valores_recebidos,
+                 
             }
-            return render(request, 'aposta.html', context)
+            return render(request, 'palpite.html', context)
+        
         context = {
             'usuario': usuario,
-            'aposta_encerrada_global': aposta_encerrada_global,
-            'aposta_vencedora_usuario': aposta_vencedora_usuario,  # pode ser None
+            'palpite_encerrada_global': palpite_encerrada_global,
+            'palpite_vencedora_usuario': palpite_usuario, 
+            
         }
-        return render(request, 'apostas.html', context)       
+        return render(request, 'palpite.html', context)       
 
-    # Caso contrário, tela normal de apostas
-    usuario_apostas = Aposta.objects.filter(usuario=usuario, status='valida')
-    total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-    quantidade_apostas = usuario_apostas.count()
-    ultima_aposta = usuario_apostas.first()
+    # Caso contrário, tela normal de palpites
+    usuario_palpites = palpite.objects.filter(usuario=usuario, status='valida')
+    total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
+    quantidade_palpites = usuario_palpites.count()
+    ultima_palpite = usuario_palpites.first()
+
 
     context = {
         'usuario': usuario,
-        'total_apostado': total_apostado,
-        'quantidade_apostas': quantidade_apostas,
-        'ultima_aposta': ultima_aposta,
+        'total_palpitedo': total_palpitedo,
+        'usuario': usuario,
+        'total_palpitedo': total_palpitedo,
+        'quantidade_palpites': quantidade_palpites,
+        'ultima_palpite': ultima_palpite,
     }
-    return render(request, 'apostas.html', context)
+    return render(request, 'palpite.html', context)
+
+
 
 
 # View para obter os potes e odds (para o frontend buscar as informações)
@@ -279,19 +293,19 @@ def apostas_view(request):
 @require_http_methods(["GET"])
 def get_dados_usuario_e_odds(request):
     try:
-        odds_data = Aposta.objects.calcular_odds()
-        total_masculino = Aposta.objects.get_total_pote_masculino()
-        total_feminino = Aposta.objects.get_total_pote_feminino()
+        odds_data = palpite.objects.calcular_odds()
+        total_masculino = palpite.objects.get_total_pote_masculino()
+        total_feminino = palpite.objects.get_total_pote_feminino()
 
-        usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
-        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-        quantidade_apostas = usuario_apostas.count()
-        ultima_aposta = usuario_apostas.order_by('-data_aposta').first()
+        usuario_palpites = palpite.objects.filter(usuario=request.user, status='valida')
+        total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
+        quantidade_palpites = usuario_palpites.count()
+        ultima_palpite = usuario_palpites.order_by('-data_palpite').first()
 
-        ultima_aposta_texto = "-"
-        if ultima_aposta:
-            sexo_display = "Menino" if ultima_aposta.sexo_escolha == 'M' else "Menina"
-            ultima_aposta_texto = f"{sexo_display} - R$ {ultima_aposta.valor_aposta:.2f}".replace('.', ',')
+        ultima_palpite_texto = "-"
+        if ultima_palpite:
+            sexo_display = "Menino" if ultima_palpite.sexo_escolha == 'M' else "Menina"
+            ultima_palpite_texto = f"{sexo_display} - R$ {ultima_palpite.valor_palpite:.2f}".replace('.', ',')
 
         return JsonResponse({
             'success': True,
@@ -301,9 +315,9 @@ def get_dados_usuario_e_odds(request):
             'total_pote_feminino': str(total_feminino),
             'usuario': {
                 'nome': request.user.nome,
-                'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
-                'quantidade_apostas': quantidade_apostas,
-                'ultima_aposta': ultima_aposta_texto,
+                'total_palpitedo': f"R$ {total_palpitedo:.2f}".replace('.', ','),
+                'quantidade_palpites': quantidade_palpites,
+                'ultima_palpite': ultima_palpite_texto,
             }
         })
     except Exception as e:
@@ -316,26 +330,26 @@ def get_dados_usuario_e_odds(request):
 
 @login_required
 @require_http_methods(["POST"])
-def iniciar_aposta_pix(request):
+def iniciar_palpite_pix(request):
     """
-    Recebe os dados iniciais da aposta, cria uma aposta com status 'pendente'
+    Recebe os dados iniciais da palpite, cria uma palpite com status 'pendente'
     e retorna os detalhes do PIX para o frontend.
     """
     try:
         data = json.loads(request.body)
         sexo_escolha = data.get('sexo_escolha')
-        valor_aposta = Decimal(str(data.get('valor_aposta', '0.00')))
+        valor_palpite = Decimal(str(data.get('valor_palpite', '0.00')))
         
         if not sexo_escolha or sexo_escolha not in ['M', 'F']:
             return JsonResponse({'error': 'Escolha de sexo inválida. Deve ser "M" ou "F".'}, status=400)
         
-        if not valor_aposta or valor_aposta < Decimal('0.01'):
-            return JsonResponse({'error': 'Valor da aposta inválido. Mínimo de R$0.01.'}, status=400)
+        if not valor_palpite or valor_palpite < Decimal('0.01'):
+            return JsonResponse({'error': 'Valor da palpite inválido. Mínimo de R$0.01.'}, status=400)
         
-        aposta = Aposta.objects.create(
+        palpite = palpite.objects.create(
             usuario=request.user,
             sexo_escolha=sexo_escolha,
-            valor_aposta=valor_aposta,
+            valor_palpite=valor_palpite,
             status='pendente',
         )
 
@@ -346,15 +360,15 @@ def iniciar_aposta_pix(request):
 
         
         pix_payload = generate_pix_payload(
-            nome_recebedor, chave_pix_recebedor, valor_aposta, cidade_recebedor, str(aposta.id)
+            nome_recebedor, chave_pix_recebedor, valor_palpite, cidade_recebedor, str(palpite.id)
         )
         print(pix_payload)
         
         return JsonResponse({
             'success': True,
-            'message':'Aposta registrada para pagamento',
-            'aposta_id': str(aposta.id),
-            'valor_aposta': str(aposta.valor_aposta),
+            'message':'palpite registrada para pagamento',
+            'palpite_id': str(palpite.id),
+            'valor_palpite': str(palpite.valor_palpite),
             'chave_pix': str(chave_pix_recebedor),
             'pix_payload': str(pix_payload)
         }, status=200)
@@ -362,54 +376,54 @@ def iniciar_aposta_pix(request):
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"Erro ao iniciar aposta Pix: {e}")
-        return JsonResponse({'error': f'Erro ao iniciar aposta PIX: {str(e)}'}, status=500)
+        logger.error(f"Erro ao iniciar palpite Pix: {e}")
+        return JsonResponse({'error': f'Erro ao iniciar palpite PIX: {str(e)}'}, status=500)
 
 
 @login_required
 @require_http_methods(["POST"])
-def confirmar_pagamento_aposta(request):
+def confirmar_pagamento_palpite(request):
     """
-    Recebe o ID da aposta pendente (sem comprovante de arquivo),
-    e atualiza o status da aposta para 'aguardando_validacao'.
+    Recebe o ID da palpite pendente (sem comprovante de arquivo),
+    e atualiza o status da palpite para 'aguardando_validacao'.
     """
     try:
         data = json.loads(request.body) #Agora espera JSON, não FormData
-        aposta_id = data.get('aposta_id')
+        palpite_id = data.get('palpite_id')
 
-        if not aposta_id:
-            return JsonResponse({'error': 'ID da aposta ausente'}, status=400)
+        if not palpite_id:
+            return JsonResponse({'error': 'ID da palpite ausente'}, status=400)
         
-        aposta = get_object_or_404(Aposta, id=aposta_id, usuario=request.user, status='pendente')
+        palpite = get_object_or_404(palpite, id=palpite_id, usuario=request.user, status='pendente')
 
-        aposta.status = 'aguardando_validacao'
-        aposta.save()
+        palpite.status = 'aguardando_validacao'
+        palpite.save()
 
         # Recalcula e retorna os dados atualizados do usuário para o frontend
-        # Filtra por apostas com status 'valida' para os cálculos do usuário
+        # Filtra por palpites com status 'valida' para os cálculos do usuário
 
-        usuario_apostas = Aposta.objects.filter(usuario=request.user, status='valida')
-        total_apostado = usuario_apostas.aggregate(total=Sum('valor_aposta'))['total'] or Decimal('0.00')
-        quantidade_apostas = usuario_apostas.count()
-        ultima_aposta_obj = usuario_apostas.order_by('-data_aposta').first()
+        usuario_palpites = palpite.objects.filter(usuario=request.user, status='valida')
+        total_palpitedo = usuario_palpites.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
+        quantidade_palpites = usuario_palpites.count()
+        ultima_palpite_obj = usuario_palpites.order_by('-data_palpite').first()
 
-        ultima_aposta_texto = "-"
-        if ultima_aposta_obj:
-            sexo_display = "Menino" if ultima_aposta_obj.sexo_escolha == 'M' else "Menina"
-            ultima_aposta_texto = f"{sexo_display} - R$ {ultima_aposta_obj.valor_aposta:.2f}".replace('.', ',')
+        ultima_palpite_texto = "-"
+        if ultima_palpite_obj:
+            sexo_display = "Menino" if ultima_palpite_obj.sexo_escolha == 'M' else "Menina"
+            ultima_palpite_texto = f"{sexo_display} - R$ {ultima_palpite_obj.valor_palpite:.2f}".replace('.', ',')
 
         return JsonResponse({
             'success': True,
-            'message': 'Aposta finalizada! Aguardando validação do pagamento.',
+            'message': 'palpite finalizada! Aguardando validação do pagamento.',
             'usuario_atualizado': {
-                'total_apostado': f"R$ {total_apostado:.2f}".replace('.', ','),
-                'quantidade_apostas': quantidade_apostas,
-                'ultima_aposta': ultima_aposta_texto,
+                'total_palpitedo': f"R$ {total_palpitedo:.2f}".replace('.', ','),
+                'quantidade_palpites': quantidade_palpites,
+                'ultima_palpite': ultima_palpite_texto,
             }
         }, status=200)
     
-    except Aposta.DoesNotExist:
-        return JsonResponse({'error': 'Aposta pendente não encontrada ou não pertence ao usuário.'}, status=404)
+    except palpite.DoesNotExist:
+        return JsonResponse({'error': 'palpite pendente não encontrada ou não pertence ao usuário.'}, status=404)
     except Exception as e:
         print(f"Erro ao confirmar pagamento: {e}")
         return JsonResponse({'error': f'Erro ao confirmar pagamento: {str(e)}'}, status=500)
@@ -419,7 +433,7 @@ import logging
 from django.contrib import admin, messages
 from django.shortcuts import render, redirect, get_list_or_404
 from django import forms
-from .models import Aposta
+from .models import palpite
 
 class EncerramentoForm(forms.Form):
     OPCOES = (
@@ -427,14 +441,14 @@ class EncerramentoForm(forms.Form):
         ('F', 'Menina'),
     )
     opcao_correta = forms.ChoiceField(choices=OPCOES, label='Qual foi a opção correta?')
-    aposta_ids = forms.CharField(widget=forms.HiddenInput) #IDs das apostas selecionadas
+    palpite_ids = forms.CharField(widget=forms.HiddenInput) #IDs das palpites selecionadas
 
 # Configura logger
 logger = logging.getLogger(__name__)
 
-def encerrar_apostas_view(request):
+def encerrar_palpites_view(request):
     """
-    View avançada para encerrar apostas no admin.
+    View avançada para encerrar palpites no admin.
     Protegida via admin_site.admin_view.
     """
     try:
@@ -443,18 +457,18 @@ def encerrar_apostas_view(request):
             form = EncerramentoForm(request.POST)
             if form.is_valid():
                 opcao_correta = form.cleaned_data['opcao_correta']
-                aposta_ids = [id_ for id_ in form.cleaned_data['aposta_ids'].split(',') if id_.isdigit()]
+                palpite_ids = [id_ for id_ in form.cleaned_data['palpite_ids'].split(',') if id_.isdigit()]
 
-                # Filtra apenas apostas válidas e ainda não encerradas
-                apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
+                # Filtra apenas palpites válidas e ainda não encerradas
+                palpites = palpite.objects.filter(id__in=palpite_ids, encerrado=False)
                 
-                if not apostas.exists():
-                    messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
-                    return redirect('admin:core_aposta_changelist')
+                if not palpites.exists():
+                    messages.warning(request, "Nenhuma palpite válida encontrada para encerrar.")
+                    return redirect('admin:core_palpite_changelist')
 
                 # Calcula odds, com fallback seguro
                 try:
-                    odds = Aposta.objects.calcular_odds()
+                    odds = palpite.objects.calcular_odds()
                     odd_pagamento = odds.get(opcao_correta, Decimal('1.00'))
                 except Exception as e:
                     logger.error(f"Erro ao calcular odds: {e}")
@@ -465,57 +479,57 @@ def encerrar_apostas_view(request):
                 total_vencedoras = 0
                 valor_total_pago = Decimal('0.00')
 
-                for aposta in apostas:
+                for palpite in palpites:
                     try:
-                        aposta.encerrado = True
-                        valor_liquido = aposta.valor_para_pote or Decimal('0.00')
+                        palpite.encerrado = True
+                        valor_liquido = palpite.valor_para_pote or Decimal('0.00')
 
-                        if aposta.sexo_escolha == opcao_correta:
-                            aposta.valor_para_pagar = valor_liquido * Decimal(odd_pagamento)
-                            valor_total_pago += aposta.valor_para_pagar
+                        if palpite.sexo_escolha == opcao_correta:
+                            palpite.valor_para_pagar = valor_liquido * Decimal(odd_pagamento)
+                            valor_total_pago += palpite.valor_para_pagar
                             total_vencedoras += 1
                         else:
-                            aposta.valor_para_pagar = Decimal('0.00')
+                            palpite.valor_para_pagar = Decimal('0.00')
 
-                        aposta.save()
+                        palpite.save()
                         total_encerradas += 1
                     except Exception as e:
-                        logger.error(f"Erro ao processar aposta {aposta.id}: {e}")
+                        logger.error(f"Erro ao processar palpite {palpite.id}: {e}")
 
                 resultado_nome = "👶 Menino" if opcao_correta == 'M' else "👧 Menina"
                 msg = f"""
                     🎉 RESULTADO: {resultado_nome}
                     📊 ESTATÍSTICAS:
                     • Total processadas: {total_encerradas}
-                    • Apostas vencedoras: {total_vencedoras}
-                    • Apostas perdedoras: {total_encerradas - total_vencedoras}
+                    • palpites vencedoras: {total_vencedoras}
+                    • palpites perdedoras: {total_encerradas - total_vencedoras}
                     • Valor total pago: R$ {valor_total_pago:.2f}
-                    ✅ TODAS AS APOSTAS FORAM ENCERRADAS!
+                    ✅ TODAS AS palpiteS FORAM ENCERRADAS!
                                     """.strip()
                 messages.success(request, msg)
-                return redirect('admin:core_aposta_changelist')
+                return redirect('admin:core_palpite_changelist')
 
         else:
             # GET: mostra o formulário do admin
-            aposta_ids = request.GET.get('ids', '')
-            aposta_ids = [id_ for id_ in aposta_ids.split(',') if id_.isdigit()]
-            apostas = Aposta.objects.filter(id__in=aposta_ids, encerrado=False)
-            form = EncerramentoForm(initial={'aposta_ids': ','.join(aposta_ids)})
+            palpite_ids = request.GET.get('ids', '')
+            palpite_ids = [id_ for id_ in palpite_ids.split(',') if id_.isdigit()]
+            palpites = palpite.objects.filter(id__in=palpite_ids, encerrado=False)
+            form = EncerramentoForm(initial={'palpite_ids': ','.join(palpite_ids)})
 
-            if not apostas.exists():
-                messages.warning(request, "Nenhuma aposta válida encontrada para encerrar.")
-                return redirect('admin:core_aposta_changelist')
+            if not palpites.exists():
+                messages.warning(request, "Nenhuma palpite válida encontrada para encerrar.")
+                return redirect('admin:core_palpite_changelist')
 
         context = {
             'form': form,
-            'apostas': apostas,
-            'total_apostas': apostas.count(),
-            'apostas_menino': apostas.filter(sexo_escolha='M').count(),
-            'apostas_menina': apostas.filter(sexo_escolha='F').count(),
+            'palpites': palpites,
+            'total_palpites': palpites.count(),
+            'palpites_menino': palpites.filter(sexo_escolha='M').count(),
+            'palpites_menina': palpites.filter(sexo_escolha='F').count(),
         }
-        return render(request, 'admin/encerrar_apostas.html', context)
+        return render(request, 'admin/encerrar_palpites.html', context)
 
     except Exception as e:
-        logger.exception(f"Erro inesperado na view de encerramento de apostas: {e}")
+        logger.exception(f"Erro inesperado na view de encerramento de palpites: {e}")
         messages.error(request, "Ocorreu um erro inesperado. Veja os logs para mais detalhes.")
-        return redirect('admin:core_aposta_changelist')
+        return redirect('admin:core_palpite_changelist')
