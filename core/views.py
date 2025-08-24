@@ -339,6 +339,7 @@ def iniciar_palpite_pix(request):
         data = json.loads(request.body)
         sexo_escolha = data.get('sexo_escolha')
         valor_palpite = Decimal(str(data.get('valor_palpite', '0.00')))
+        palpite_solidario = data.get('palpite_solidario', True)
         
         if not sexo_escolha or sexo_escolha not in ['M', 'F']:
             return JsonResponse({'error': 'Escolha de sexo inválida. Deve ser "M" ou "F".'}, status=400)
@@ -346,8 +347,11 @@ def iniciar_palpite_pix(request):
         if not valor_palpite or valor_palpite < Decimal('0.01'):
             return JsonResponse({'error': 'Valor da palpite inválido. Mínimo de R$0.01.'}, status=400)
         
+        
+        
         palpite = Palpite.objects.create(
             usuario=request.user,
+            palpite_solidario = palpite_solidario,
             sexo_escolha=sexo_escolha,
             valor_palpite=valor_palpite,
             status='pendente',

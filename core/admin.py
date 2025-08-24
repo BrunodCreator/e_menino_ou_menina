@@ -117,7 +117,7 @@ class palpiteAdmin(admin.ModelAdmin):
     
     list_display = ('usuario', 'palpite_solidario' ,'data_palpite','sexo_escolha', 'valor_palpite','valor_para_pote', 'status', 'encerrado', 'valor_para_pagar')
     
-    list_filter = ('status', 'sexo_escolha')
+    list_filter = ('status', 'sexo_escolha', 'palpite_solidario')
 
     search_fields = ('usuario__nome', 'status')
 
