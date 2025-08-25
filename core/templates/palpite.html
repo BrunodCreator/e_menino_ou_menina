@@ -69,17 +69,17 @@
             </div>
             
             <div class="info-item">
-                <div class="info-label">Total palpitedo</div>
+                <div class="info-label">Total:  </div>
                 <div class="info-value money" id="totalBet">R$ 0,00</div>
             </div>
             
             <div class="info-item">
-                <div class="info-label">palpites Realizadas</div>
+                <div class="info-label">Palpites Realizados</div>
                 <div class="info-value" id="betCount">0</div>
             </div>
             
             <div class="info-item">
-                <div class="info-label">Última palpite</div>
+                <div class="info-label">Último palpite</div>
                 <div class="info-value" id="lastBet">-</div>
             </div>
         </div>
@@ -94,13 +94,13 @@
 
     <div class="main-content" id="mainContent">
         <div class="container" id="container">
-            <div class="odds-text" id="oddMenino">odd: 1.0x</div>
+            <div class="odds-text" id="oddMenino">Odd:</div>
                 <button class="conxfirm-button" id="confirmButton1">
                     CONFIRMAR
                 </button>
         </div>
         <div class="container2" id="container2">   
-            <div class="odds-text" id="oddMenina">odd: 1.0x</div>
+            <div class="odds-text" id="oddMenina">Odd:</div>
                 <button class="conxfirm-button" id="confirmButton2">
                     CONFIRMAR
                 </button>
@@ -119,13 +119,17 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label" for="betAmount">Valor da palpite (R$):</label>
+                <label class="form-label" for="betAmount">Valor do palpite (R$):</label>
                 <input type="number" id="betAmount" class="form-input" placeholder="0,00" min="1" step="0.01">
             </div>
             
             <div class="return-info">
                 <div class="return-label">Retorno Esperado:</div>
                 <div class="return-value" id="expectedReturn">R$ 0,00</div>
+            </div>
+            <div> 
+                <input type="checkbox" id="checkbox_palpite_solidario" name="checkbox_palpite_solidario" checked>
+                Palpite solidário (Caso seja premiado deseja deixar o valor total para os pais)
             </div>
             
             <div class="form-buttons">

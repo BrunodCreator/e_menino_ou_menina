@@ -25,6 +25,7 @@ const messageModalContent = document.getElementById('messageModalContent');
 const messageModalText = document.getElementById('messageModalText');
 const messageModalConfirmButton = document.getElementById('messageModalConfirmButton');
 const messageModalCancelButton = document.getElementById('messageModalCancelButton');
+const checkbox = document.getElementById("checkbox_palpite_solidario")
 
 // Variáveis de estado
 let currentSelection = null;
@@ -395,7 +396,8 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
                 },
                 body: JSON.stringify({
                     sexo_escolha: currentSelection === 'menino' ? 'M' : 'F',
-                    valor_palpite: betAmount
+                    valor_palpite: betAmount,
+                    palpite_solidario: checkbox.checked
                 })
             });
 
