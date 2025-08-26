@@ -371,7 +371,7 @@ if (placeBetButton && betAmountInput && totalBetElement && betCountElement && la
         const betAmount = parseFloat(betAmountInput.value);
 
         if (!betAmount || betAmount < 0.01) {
-            showMessageModal('Por favor, insira um valor válido para a palpite (mínimo R$ 0,01).');
+            showMessageModal('Por favor, insira um valor válido para o palpite (mínimo R$ 0,01).');
             return;
         }
 
