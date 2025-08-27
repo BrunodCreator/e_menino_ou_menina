@@ -91,7 +91,7 @@ DATABASES = {
         'NAME': 'CHA_REVELACAO', # O nome do DB que você criou no MySQL
         'USER': 'sa',    # O nome do usuário MySQL que você criou
         'PASSWORD': 'Fpto@123', # A senha do usuário MySQL que você criou
-        'HOST': '127.0.0.1',      # Ou '127.0.0.1'
+        'HOST': '192.168.1.2',      # Ou '127.0.0.1'
         'PORT': '3306',           # Porta padrão do MySQL
     }
 }
