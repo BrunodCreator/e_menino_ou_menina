@@ -2,7 +2,7 @@
 name = "e_menino_ou_menina" # Ajuste o nome conforme seu projeto
 version = "0.1.0"
 authors = [{ name = "Emerson Bruno", email = "bruno.dqueiroz@gmail.com" }]
-requires-python = ">=3.8"
+requires-python = "3.12"
 
 dependencies = [
     "pandas",
