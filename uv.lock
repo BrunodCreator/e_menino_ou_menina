@@ -143,7 +143,6 @@ dependencies = [
     { name = "pillow" },
     { name = "pix-python" },
     { name = "pixqrcodegen" },
-    { name = "pypix" },
     { name = "qrcode", extra = ["pil"] },
     { name = "requests" },
     { name = "whitenoise" },
@@ -169,7 +168,6 @@ requires-dist = [
     { name = "pillow", specifier = ">=10.4.0" },
     { name = "pix-python", specifier = ">=1.0.1" },
     { name = "pixqrcodegen", specifier = ">=0.5" },
-    { name = "pypix", specifier = ">=0.1.6" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "qrcode", extras = ["pil"], specifier = ">=7.4.2" },
     { name = "requests" },
@@ -597,15 +595,6 @@ name = "pyperclip"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/30/23/2f0a3efc4d6a32f3b63cdff36cd398d9701d26cda58e3ab97ac79fb5e60d/pyperclip-1.9.0.tar.gz", hash = "sha256:b7de0142ddc81bfc5c7507eea19da920b92252b548b96186caf94a5e2527d310", size = 20961, upload-time = "2024-06-18T20:38:48.401Z" }
-
-[[package]]
-name = "pypix"
-version = "0.1.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/11/39/da4491c650968a6f407b569c787b00bbfdd991416af003d9fa48de7262c6/pypix-0.1.6.tar.gz", hash = "sha256:69a1680bc4a328f0bead59558767adbc6486cc46a38046fed28ad15a3d35347d", size = 15339, upload-time = "2020-11-29T18:38:33.856Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/24/b3166f77d7e89538cccfb31ffd542cf124cd5f325ff2d2763d91208d592b/pypix-0.1.6-py3-none-any.whl", hash = "sha256:a647020a0e3c97f5236f2050b47190ad56d7f5743262098d233b20e016a81c1a", size = 15389, upload-time = "2020-11-29T18:38:32.832Z" },
-]
 
 [[package]]
 name = "pyrect"
