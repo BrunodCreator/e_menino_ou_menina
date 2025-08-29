@@ -80,7 +80,7 @@ PASSWORD_HASHERS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQLDATABASE'),
+        'NAME': os.getenv('MYSQL_DATABASE'),
         'USER': os.getenv('MYSQLUSER'),
         'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),
         'HOST':  os.getenv('MYSQLHOST'),
@@ -91,9 +91,9 @@ DATABASES = {
     }
 }
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'unsafe-secret')
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG = False
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
 
