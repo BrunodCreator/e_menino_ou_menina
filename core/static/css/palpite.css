@@ -13,6 +13,8 @@ html, body {
     box-sizing: border-box;
 }
 
+
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -309,7 +311,178 @@ html, body {
     transition: filter 0.3s ease, width 0.3s ease;
 }
 
+/* Fundo semitransparente que cobre a tela inteira */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+/* Container principal da modal */
+.winner-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Efeito de confete */
+.confetti {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.confetti::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="5" height="5" fill="#FFC0CB"/><rect x="5" y="5" width="5" height="5" fill="#ADD8E6"/></svg>');
+  animation: confetti-fall 5s infinite;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100%); opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+/* Título e textos */
+.modal-title {
+  font-size: 2.5em;
+  font-weight: bold;
+  background: linear-gradient(to right, #ff69b4, #4169e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.modal-subtitle {
+  font-size: 1.5em;
+  font-weight: 500;
+  color: #333;
+}
+
+.odds {
+  font-size: 0.9em;
+  background-color: #f0f0f0;
+  color: #555;
+  padding: 4px 10px;
+  border-radius: 15px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+/* Seção do ganhador */
+.winner-info {
+  margin-top: 25px;
+  padding: 15px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.winner-info p {
+  margin: 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.winner-info h3 {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+  background: #f5f5f5;
+  padding: 8px 15px;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+.winnings ul{
+    list-style: circle;
+    align-items: start;
+    margin: 1em;
+}
+
+.modal-backdrop{
+    
+}
+
+.winnings {
+  margin-top: 15px;
+}
+
+.winnings h2 {
+  font-size: 2em;
+  font-weight: bold;
+  color: #28a745;
+  margin: 0;
+}
+
+/* Botão */
+.modal-button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin-top: 30px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(to right, #ff69b4, #4169e1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.modal-button:hover {
+  transform: translateY(-2px);
+}
+/*.pageResult{
+    background-image: url("midias/Image/Gemini_Generated_Image_rld6kgrld6kgrld6.png");
+    background-image: url("midias/Image/Gemini_Generated_Image_shyh9xshyh9xshyh.png");
+    background-image: url("midias/Image/Gemini_Generated_Image_z5wpm9z5wpm9z5wp.png")
+    position: fixed;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;   
+    background-position: center;
+    background-repeat: no-repeat;
+
+    
+    display: flex;
+    justify-content: center; centraliza na horizontal 
+    align-items: center;   
+}
+
+#resultado-encerrado{
+    border-radius: 25px;
+    background-color: rgb(244, 244, 244);
+
+    width: 50%;
+    padding: 1em;
+}
+
+ */
 
 #confirmButton1{
     border:4px solid e186b5;
