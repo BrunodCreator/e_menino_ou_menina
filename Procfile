@@ -1,1 +1,1 @@
-web: .venv/bin/gunicorn QuemVemAi.wsgi --bind 0.0.0.0:$PORT
+web: .venv/bin/gunicorn QuemVemAI.wsgi --bind 0.0.0.0:$PORT
