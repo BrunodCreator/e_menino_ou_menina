@@ -358,7 +358,7 @@ betAmountInput.addEventListener('input', function() {
         return;
     }
 
-    const valueForPot = betAmount * 0.70;
+    const valueForPot = betAmount * 0.75;
     const expectedReturn = valueForPot * currentOdds;
 
     expectedReturnElement.textContent = `R$ ${expectedReturn.toFixed(2).replace('.', ',')}`;
