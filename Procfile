@@ -1,1 +1,3 @@
+release: python manage.py migrate --noinput
+
 web: .venv/bin/gunicorn QuemVemAI.wsgi --bind 0.0.0.0:$PORT
