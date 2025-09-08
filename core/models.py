@@ -199,7 +199,7 @@ class PalpiteManager(models.Manager):
         """
         Retorna o total destinado aos pais (30% do total bruto arrecadado).
         """
-        return money(self.get_total_arrecadado_bruto() * Decimal('0.30')) #TODO LEMBRAR DE MUDAR
+        return money(self.get_total_arrecadado_bruto() * Decimal('0.25')) #TODO LEMBRAR DE MUDAR
     
     def calcular_odds(self):
         """
@@ -321,7 +321,7 @@ class Palpite(models.Model):
 
     data_palpite = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="Data da palpite"
+        verbose_name="Data do palpite"
     )
 
     valor_para_pagar = models.DecimalField(
@@ -336,8 +336,8 @@ class Palpite(models.Model):
 
     encerrado = models.BooleanField(
         default=False,
-        verbose_name="palpite encerrada",
-        help_text="Indica se a palpite foi encerrada e não aceita mais novos palpites"
+        verbose_name="palpite encerrado",
+        help_text="Indica se o palpite foi encerrada e não aceita mais novos palpites"
     )
 
 
@@ -353,7 +353,7 @@ class Palpite(models.Model):
         choices=STATUS_PAYMENT,
         default='pendente',
         help_text="Status atual da palpite (ex: pendente, aguardando validação, válida).",
-        verbose_name="Status da palpite"
+        verbose_name="Status do palpite"
     )
 
 
@@ -379,9 +379,9 @@ class Palpite(models.Model):
         """
         Sobrescreve o método save para calcular 'valor_para_pote' antes de salvar.
         """
-        # Calcula 70% do valor_palpite antes de salvar
+        # Calcula 75% do valor_palpite antes de salvar
         if self.valor_palpite is not None:
-            self.valor_para_pote = money(self.valor_palpite * Decimal('0.70')) #TODO por favor lembrar de mudar para o valor correto
+            self.valor_para_pote = money(self.valor_palpite * Decimal('0.75'))
         else:
             self.valor_para_pote = Decimal('0.00')
 

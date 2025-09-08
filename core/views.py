@@ -463,10 +463,10 @@ def encerrar_palpites_view(request):
                 palpite_ids = [id_ for id_ in form.cleaned_data['palpite_ids'].split(',') if id_.isdigit()]
 
                 # Filtra apenas palpites válidas e ainda não encerradas
-                palpites = Palpite.objects.filter(id__in=palpite_ids, status='Válida', encerrado=False)
+                palpites = Palpite.objects.filter(id__in=palpite_ids, status='valida', encerrado=False)
                 
                 if not palpites.exists():
-                    messages.warning(request, "Nenhuma palpite válida encontrada para encerrar.")
+                    messages.warning(request, "Nenhum palpite válido encontrada para encerrar.")
                     return redirect('admin:core_palpite_changelist')
 
                 # Calcula odds, com fallback seguro
