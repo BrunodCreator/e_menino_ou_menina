@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -78,24 +79,16 @@ PASSWORD_HASHERS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DATABASE'),
-        'USER': os.getenv('MYSQLUSER'),
-        'PASSWORD': os.getenv('MYSQL_ROOT_PASSWORD'),
-        'HOST':  os.getenv('MYSQLHOST'),
-        'PORT': os.getenv('MYSQLPORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL")  # Railway expõe essa variável
+    )
 }
 
 CSRF_TRUSTED_ORIGINS = [
     "https://emeninooumenina-homologacao.up.railway.app"
 ]
 
-SECRET_KEY = os.getenv("SECRET_KEY", os.getenv("DJANGO_SECRET_KEY"))
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
