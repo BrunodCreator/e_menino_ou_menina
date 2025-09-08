@@ -5,52 +5,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faça seu palpite</title>
-    <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
     <link rel="stylesheet" href="{% static 'css/palpite.css' %}" defer>
     <!-- Adiciona o CSRF token como meta tag para facilitar o acesso via JS-->
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/lottie.json">
+    <link rel="stylesheet" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/lottie.json">
 </head>
+
 <body>
     {% if palpite_encerrada_global and not palpite_usuario %}
-        <div id="resultado-encerrado" class="celebration">
-                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
-                <p>Teste</p>
+    <div id="resultado-encerrado" class="celebration">
+        <!-- <h1> É {{ palpite.resultado}}!</h1> -->
+        <div class="winner-modal" id="winner-modal">
+            <div class="modal-header">
+                <div class="titleImg"> 
+                    <h2 class="modal-subtitle">As apostas se encerraram</h2>
+                </div>
+                <div class="description">
+                    <h2 class="modal-title">
+                        {% for palpite in palpite_usuario %}
+                        {% if palpite.valor_para_pagar > 0 and palpite.sexo_escolha == "M" %}
+                        É UM MENINO!
+                        {% else %}
+                        É UMA MENINA!
+                        {% endif %}
+                        {% endfor %}
+                    </h2>   
+                    <p>Infelimente não é possivel realizar palpites, encerramos as apostas.</p>                         
+                    <br>
+                </div>
             </div>
+        </div>
+    </div>
     
     {% elif palpite_encerrada_global and palpite_usuario %}
         {% if valores_recebidos > 0 %}
-            <div id="resultado-encerrado" class="celebration">
-                <!-- <h1> É {{ palpite.resultado}}!</h1> -->
-                <!-- <p>Você acertou, o bebê é {{palpite_usuario.palpite}}</p> -->
-                 <p>Quantidade de palpites: {{quantidade_palpites}}</p>
-                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
-                <p>A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}</p>
-                <p>Você vai receber: R$ {{valores_recebidos}}</p>
-                 <h3>Suas palpites:</h3>
-            <ul>
-                {% for palpite in palpite_usuario %}
-                    <li>
-                        Palpite: {% if palpite.sexo_escolha == "M" %}
-                                    Menino
+                <div class="winner-modal" id="winner-modal">
+                    <div class="modal-header">
+                        <div class="titleImg"> 
+                                <picture>
+                                <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp" type="image/webp">
+                                <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif" alt="🎉" width="32" height="32">
+                            </picture>
+                            <h2 class="modal-subtitle">Você Acertou</h2>
+                            <picture>
+                                <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp" type="image/webp">
+                                <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif" alt="🎉" width="32" height="32">
+                            </picture>
+                        </div>
+                        <div class="description">
+                            <h2 class="modal-title">
+                                {% for palpite in palpite_usuario %}
+                                {% if palpite.valor_para_pagar > 0 and palpite.sexo_escolha == "M" %}
+                                É UM MENINO!
                                 {% else %}
-                                    Menina
-                                {% endif %} |
-                        Valor: R$ {{ palpite.valor_palpite }} |
-                        Receberá: R$ {{ palpite.valor_para_pagar }}
-                    </li>
-                {% endfor %}
+                                É UMA MENINA!
+                                {% endif %}
+                                {% endfor %}
+                            </h2>
+                            <span class="odds">Odds: 1.85</span>
+                            <p>Quantidade de palpites: {{quantidade_palpites}}</p>
+                            <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                            <p> 
+                                {% for palpite in palpite_usuario %}                                
+                                    {% if  palpite.palpite_solidario %}
+                                    <p class="valueToGive">A sua ajuda no enxoval foi de R$: {{valores_recebidos}} </p>                               
+                                    {% else %}
+                                    A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}
+                                    <p class="valueToGive">Você vai receber: R$ {{valores_recebidos}}</p><br>
+                                    {% endif %}    
+                                    {% endfor %}                                
+                                </p>
+                                <h3>Seus palpites:</h3>
+                                
+                                <table border="1">
+                                <thead>
+                                    <tr>
+                                        <th>Palpite</th>
+                                        <th>Valor</th>
+                                        <th>Receberá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for palpite in palpite_usuario %}
+                                    <tr>
+                                        <td>
+                                            {% if palpite.sexo_escolha == "M" %}
+                                            Menino
+                                            {% else %}
+                                            Menina
+                                            {% endif %}
+                                        </td>
+                                        <td>R$ {{ palpite.valor_palpite }}</td>
+                                        
+                                        {% for palpite in palpite_usuario %}                                
+                                            {% if  palpite.palpite_solidario %}
+                                            <td>R$ {{ 0.0}}</td>                             
+                                            {% else %}
+                                            <td>R$ {{ palpite.valor_para_pagar }}</td>
+                                            {% endif %}    
+                                        {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    </table>
+                                    
+                                <br>
+                                <hr>
+                                <p>Agradecemos sua participação</p>
+                            </div>
+                        </div>
+                </div>
             </div>
-
-        {% else %}
+            
+            {% else %}
             <div id="resultado-encerrado" class="error">
                 <!-- <p>Você errou! O bebê é {{palpite_encerrada_global.palpite}}</p> -->
-                <p>Você Enviou: R$ {{valores_palpitedos}}</p>
-                <p>A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+                <div class="winner-modal" id="winner-modal">
+                    <div class="modal-header">
+                        <div class="titleImg"> 
+                            <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.webp" type="image/webp">
+                            <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.gif" alt="😭" width="32" height="32">
+                        </picture>
+                        <h2 class="modal-subtitle">Infelizmente não foi dessa vez</h2>
+                        <picture>
+                            <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.webp" type="image/webp">
+                            <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f62d/512.gif" alt="😭" width="32" height="32">
+                        </picture>
+                    </div>
+                    <div class="description">                      
+                        <h2 class="modal-title">
+                            {% for palpite in palpite_usuario %}
+                            {% if palpite.valor_para_pagar == "0.00" and palpite.sexo_escolha == "M" %}
+                            É UM MENINO!
+                            {% else %}
+                            É UMA MENINA!
+                            {% endif %}
+                            {% endfor %}
+                        </h2>
+                        <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                        <p class="valueToGive">A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+                        
+                        <h3>Seus palpites:</h3>
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <th>Palpite</th>
+                                    <th>Valor</th>
+                                    <th>Receberá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for palpite in palpite_usuario %}
+                                <tr>
+                                    <td>
+                                        {% if palpite.sexo_escolha == "M" %}
+                                        Menino
+                                        {% else %}
+                                        Menina
+                                        {% endif %}
+                                    </td>
+                                    <td>R$ {{ palpite.valor_palpite }}</td>
+                                    <td>R$ {{ palpite.valor_para_pagar }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <br>
+                            <hr>
+                            <p>Agradecemos sua participação</p>
+                        </div>
+                </div>
             </div>
-        {% endif %}
+        </div>
+    {% endif %}
    
     {% else %}
     <button class="menu-toggle" id="menuToggle">
