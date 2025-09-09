@@ -534,16 +534,6 @@ if (modalOverlay) {
 }
 
 
-// Fechar modal clicando fora
-if (modalOverlay) {
-    modalOverlay.addEventListener('click', function(e) {
-        if (e.target === modalOverlay) {
-            modalOverlay.classList.remove('show');
-        }
-    });
-}
-
-
 // Logout
 if (logoutButton) {
     logoutButton.addEventListener('click', async function () {
