@@ -237,7 +237,7 @@ def palpites_view(request):
 
     # Verifica se o usuário atual tem alguma palpite vencedora
     palpite_usuario = (
-        Palpite.objects.filter(usuario=usuario, encerrado=True, status='Válida')
+        Palpite.objects.filter(usuario=usuario, encerrado=True, status='valida')
     )
 
     if palpite_encerrada_global:
