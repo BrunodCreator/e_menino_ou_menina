@@ -357,8 +357,8 @@ def iniciar_palpite_pix(request):
             status='pendente',
         )
 
-        chave_pix_recebedor = "07533960173"
-        nome_recebedor = "EMERSON BRUNO DE QUEIROZ"
+        chave_pix_recebedor = "wenderjohnata01@hotmail.com"
+        nome_recebedor = "WENDER JOHNATA DE SOUSA"
         cidade_recebedor = "GOIANIA"
         
 
