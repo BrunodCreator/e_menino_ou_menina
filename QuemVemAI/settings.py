@@ -91,7 +91,9 @@ CSRF_TRUSTED_ORIGINS = [
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
-DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = os.getenv("DEBUG", "False") == "True"
+
+DEBUG = True
 
 ALLOWED_HOSTS = ["emeninooumenina-homologacao.up.railway.app", "127.0.0.1", "localhost"]
 

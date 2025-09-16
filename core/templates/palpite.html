@@ -28,15 +28,9 @@
                 </div>
                 <div class="description">
                     <h2 class="modal-title">
-                        {% for palpite in palpite_usuario %}
-                        {% if palpite.valor_para_pagar > 0 and palpite.sexo_escolha == "M" %}
-                        É UM MENINO!
-                        {% else %}
-                        É UMA MENINA!
-                        {% endif %}
-                        {% endfor %}
+                    <p>{{ resultado_nascimento }}</p>
                     </h2>   
-                    <p>Infelimente não é possivel realizar palpites, encerramos as apostas.</p>                         
+                    <p>Infelimente não é possivel realizar novos palpites, a revelação já foi feita.</p>                         
                     <br>
                 </div>
             </div>
@@ -60,27 +54,14 @@
                         </div>
                         <div class="description">
                             <h2 class="modal-title">
-                                {% for palpite in palpite_usuario %}
-                                {% if palpite.valor_para_pagar > 0 and palpite.sexo_escolha == "M" %}
-                                É UM MENINO!
-                                {% else %}
-                                É UMA MENINA!
-                                {% endif %}
-                                {% endfor %}
+                                {{ resultado_nascimento }}
                             </h2>
-                            <span class="odds">Odds: 1.85</span>
+                            <span class="odds">Odd do prêmio: {{ odds_data }}X</span>
                             <p>Quantidade de palpites: {{quantidade_palpites}}</p>
-                            <p>Você Enviou: R$ {{valores_palpitedos}}</p>
-                            <p> 
-                                {% for palpite in palpite_usuario %}                                
-                                    {% if  palpite.palpite_solidario %}
-                                    <p class="valueToGive">A sua ajuda no enxoval foi de R$: {{valores_recebidos}} </p>                               
-                                    {% else %}
-                                    A sua ajuda no enxoval foi de R$: {{valor_contribuicao}}
-                                    <p class="valueToGive">Você vai receber: R$ {{valores_recebidos}}</p><br>
-                                    {% endif %}    
-                                    {% endfor %}                                
-                                </p>
+                            <p>Você Enviou: R$ {{valores_palpites}}</p> 
+                                <p class="valueToGive">A sua ajuda no enxoval foi de R$: {{ valor_enxoval }} </p>                               
+                                                               
+
                                 <h3>Seus palpites:</h3>
                                 
                                 <table border="1">
@@ -107,7 +88,7 @@
                                             {% if  palpite.palpite_solidario %}
                                             <td>R$ {{ 0.0}}</td>                             
                                             {% else %}
-                                            <td>R$ {{ palpite.valor_para_pagar }}</td>
+                                            <td>R$ {{ palpite.valor_para_pagar }}</td>  
                                             {% endif %}    
                                         {% endfor %}
                                         </tr>
@@ -140,15 +121,9 @@
                     </div>
                     <div class="description">                      
                         <h2 class="modal-title">
-                            {% for palpite in palpite_usuario %}
-                            {% if palpite.valor_para_pagar == "0.00" and palpite.sexo_escolha == "M" %}
-                            É UM MENINO!
-                            {% else %}
-                            É UMA MENINA!
-                            {% endif %}
-                            {% endfor %}
+                            {{ resultado_nascimento }}
                         </h2>
-                        <p>Você Enviou: R$ {{valores_palpitedos}}</p>
+                        <p>Você Enviou: R$ {{valores_palpites}}</p>
                         <p class="valueToGive">A sua ajuda foi de R$: {{valor_contribuicao}}</p>
                         
                         <h3>Seus palpites:</h3>
@@ -161,15 +136,11 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <td>
+                                    {{ resultado_nascimento }}
+                                </td>
                                 {% for palpite in palpite_usuario %}
                                 <tr>
-                                    <td>
-                                        {% if palpite.sexo_escolha == "M" %}
-                                        Menino
-                                        {% else %}
-                                        Menina
-                                        {% endif %}
-                                    </td>
                                     <td>R$ {{ palpite.valor_palpite }}</td>
                                     <td>R$ {{ palpite.valor_para_pagar }}</td>
                                     </tr>

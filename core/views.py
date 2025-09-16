@@ -225,7 +225,7 @@ def cadastro_usuario(request):
 
 
 
-
+from decimal import Decimal, ROUND_HALF_UP
 # Se o usuário não estiver logado, ele será redirecionado para a LOGIN_URL definida em settings.py.
 @login_required
 @require_http_methods(["GET"])
@@ -235,7 +235,7 @@ def palpites_view(request):
     # Verifica se há palpites encerradas no sistema
     palpite_encerrada_global = Palpite.objects.filter(encerrado=True).last()
 
-    # Verifica se o usuário atual tem alguma palpite vencedora
+    # Verifica se o usuário atual tem algum palpite vencedor
     palpite_usuario = (
         Palpite.objects.filter(usuario=usuario, encerrado=True, status='valida')
     )
@@ -244,17 +244,58 @@ def palpites_view(request):
             
         if palpite_usuario:
             valores_recebidos = palpite_usuario.aggregate(total=Sum('valor_para_pagar'))['total'] or Decimal('0.00')
-            valores_palpitedos = palpite_usuario.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
-            valor_contribuicao = (valores_palpitedos * Decimal("0.30")).quantize(Decimal('0.01'))
+            valores_palpites = palpite_usuario.aggregate(total=Sum('valor_palpite'))['total'] or Decimal('0.00')
+            #valor_enxoval = (valores_palpites * Decimal("0.25")).quantize(Decimal('0.01'))
             quantidade_palpites = palpite_usuario.count()
+            odds_data = Palpite.objects.calcular_odds()
+
+            palpite_ganhador = palpite_usuario.filter(valor_para_pagar__gt=0).first()
+
+            for palpite in palpite_usuario:
+                percentual = Decimal("0.25")
+                valor_para_pagar_total = Decimal("0")
+
+                palpites_processados = []
+                if palpite.valor_para_pagar > 0 and palpite.palpite_solidario: 
+                    valor_para_pagar_total += palpite.valor_para_pagar + ( palpite.valor_palpite * percentual)
+                elif palpite.valor_para_pagar and not palpite.palpite_solidario:
+                    valor_para_pagar_total += ( palpite.valor_palpite * percentual)
+
+            # garantir 2 casas decimais no resultado
+            valor_para_pagar_total = valor_para_pagar_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
+
+            if palpite_ganhador:
+                if palpite_ganhador.sexo_escolha == "F":
+                    resultado_nascimento = "É UMA MENINA!"
+                    resultado_odd = odds_data["F"]
+                else:
+                    resultado_nascimento = "É UM MENINO!"
+                    resultado_odd = odds_data["M"]
+            else:
+                #Se não tem um palpite ganhador, o resultado será o oposto do que o usuário apostou
+                primeiro_palpite = palpite_usuario.first()
+                if primeiro_palpite:
+                    if primeiro_palpite.sexo_escolha == "F":
+                        resultado_nascimento = "É UM MENINO!"  # Oposto do que apostou
+                        resultado_odd = odds_data["M"]
+                        
+                    else:
+                        resultado_nascimento = "É UMA MENINA!"  # Oposto do que apostou
+                        resultado_odd = odds_data["F"]
+                else:
+                    resultado_nascimento = "RESULTADO INDEFINIDO"
             
             context = {
                 'usuario': usuario,
                 'palpite_encerrada_global': palpite_encerrada_global,
+                'odds_data': resultado_odd,
                 'palpite_usuario': palpite_usuario,
+                'resultado_nascimento': resultado_nascimento,
                 'quantidade_palpites': quantidade_palpites,
-                'valor_contribuicao': valor_contribuicao,
-                'valores_palpitedos': valores_palpitedos,
+                'valor_enxoval': valor_para_pagar_total,
+                'valores_palpites': valores_palpites,
                 'valores_recebidos': valores_recebidos,
                  
             }
