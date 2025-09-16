@@ -251,20 +251,21 @@ def palpites_view(request):
 
             palpite_ganhador = palpite_usuario.filter(valor_para_pagar__gt=0).first()
 
+            percentual = Decimal("0.25")
+            valor_enxoval = Decimal("0.00")
+            palpites_processados = []
+
             for palpite in palpite_usuario:
-                percentual = Decimal("0.25")
-                valor_para_pagar_total = Decimal("0")
+                taxa = (palpite.valor_palpite * percentual).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                contribuicao = taxa  # valor padrão: só a taxa+
 
-                palpites_processados = []
-                if palpite.valor_para_pagar > 0 and palpite.palpite_solidario: 
-                    valor_para_pagar_total += palpite.valor_para_pagar + ( palpite.valor_palpite * percentual)
-                elif palpite.valor_para_pagar and not palpite.palpite_solidario:
-                    valor_para_pagar_total += ( palpite.valor_palpite * percentual)
+                # palpite vencedor
+                if palpite.palpite_solidario:
+                    contribuicao = taxa + palpite.valor_para_pagar.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                else:
+                    contribuicao = taxa
 
-            # garantir 2 casas decimais no resultado
-            valor_para_pagar_total = valor_para_pagar_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-
-
+                valor_enxoval += contribuicao
 
             if palpite_ganhador:
                 if palpite_ganhador.sexo_escolha == "F":
@@ -294,7 +295,7 @@ def palpites_view(request):
                 'palpite_usuario': palpite_usuario,
                 'resultado_nascimento': resultado_nascimento,
                 'quantidade_palpites': quantidade_palpites,
-                'valor_enxoval': valor_para_pagar_total,
+                'valor_enxoval': valor_enxoval,
                 'valores_palpites': valores_palpites,
                 'valores_recebidos': valores_recebidos,
                  

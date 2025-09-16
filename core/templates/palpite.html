@@ -84,17 +84,17 @@
                                         </td>
                                         <td>R$ {{ palpite.valor_palpite }}</td>
                                         
-                                        {% for palpite in palpite_usuario %}                                
-                                            {% if  palpite.palpite_solidario %}
-                                            <td>R$ {{ 0.0}}</td>                             
-                                            {% else %}
-                                            <td>R$ {{ palpite.valor_para_pagar }}</td>  
-                                            {% endif %}    
-                                        {% endfor %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    </table>
+                                                                      
+                                        {% if  palpite.palpite_solidario %}
+                                        <td>R$ {{ 0.0}}</td>                             
+                                        {% else %}
+                                        <td>R$ {{ palpite.valor_para_pagar }}</td>  
+                                        {% endif %}    
+                                    {% endfor %}
+                                    </tr>
+                                    
+                                </tbody>
+                                </table>
                                     
                                 <br>
                                 <hr>
@@ -124,7 +124,7 @@
                             {{ resultado_nascimento }}
                         </h2>
                         <p>Você Enviou: R$ {{valores_palpites}}</p>
-                        <p class="valueToGive">A sua ajuda foi de R$: {{valor_contribuicao}}</p>
+                        <p class="valueToGive">A sua ajuda no enxoval foi de R$: {{ valor_enxoval }} </p>
                         
                         <h3>Seus palpites:</h3>
                         <table border="1">
@@ -136,11 +136,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <td>
-                                    {{ resultado_nascimento }}
-                                </td>
                                 {% for palpite in palpite_usuario %}
                                 <tr>
+                                     <td>
+                                            {% if palpite.sexo_escolha == "M" %}
+                                            Menino
+                                            {% else %}
+                                            Menina
+                                            {% endif %}
+                                        </td>
                                     <td>R$ {{ palpite.valor_palpite }}</td>
                                     <td>R$ {{ palpite.valor_para_pagar }}</td>
                                     </tr>
