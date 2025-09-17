@@ -660,16 +660,17 @@ table td:first-child {
 @media (max-width: 768px) {
 
 /*John esteve aqui*/
-#winner-modal {
 
+#winner-modal {
+    max-height: 90%;
 }
 
 #winner-modal .modal-header{
     max-width: 100%;
     position: fixed;
-    top: 0; /* fixa no topo */
-    height: 96%;
-    margin-top: 30px;
+    top: center;
+    height: auto;
+    margin-top: 20%;
     background-color: #ffffff;
 }
 

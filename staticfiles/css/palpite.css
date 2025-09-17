@@ -661,6 +661,19 @@ table td:first-child {
 
 /*John esteve aqui*/
 
+#winner-modal {
+    max-height: 90%;
+}
+
+#winner-modal .modal-header{
+    max-width: 100%;
+    position: fixed;
+    top: center;
+    height: auto;
+    margin-top: 20%;
+    background-color: #ffffff;
+}
+
 .sidebar {
     width: 200px;
     left: -230px;
