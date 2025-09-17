@@ -276,7 +276,7 @@ html, body {
 .container {
     width: 100vw;               /* largura total da tela */
     height: 100vh;               /* metade da altura da tela */
-    background-image: url("midias/Image/Gemini_Generated_Image_rld6kgrld6kgrld6.png");
+    background-image: url("../midias/Image/emenino.png");
     background-size: cover;     /* cobre toda a área */
     background-position: center;
     background-repeat: no-repeat;
@@ -295,7 +295,7 @@ html, body {
 .container2 {
     width: 100vw;
     height: 100vh;               /* metade da altura da tela */
-    background-image: url("midias/Image/Gemini_Generated_Image_shyh9xshyh9xshyh.png");
+    background-image: url("../midias/Image/emenina.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -318,7 +318,7 @@ html, body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-image: url("../css/midias/Image/tela_de_fundo.jpeg");
+    background-image: url("../midias/Image/tela_de_fundo.jpeg");
     display: flex;
     justify-content: center;
     align-items: center;
@@ -480,19 +480,6 @@ table td:first-child {
     margin-right: 50px;
 }
 
-
-/*winner-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: url("../css/midias/Image/tela_de_fundo.jpeg");
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}*/
 
 
 .winnings ul{
